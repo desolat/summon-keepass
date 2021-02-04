@@ -25,7 +25,7 @@ jobs:
         override: true
     - name: Build
       # https://github.com/johnthagen/min-sized-rust#strip-symbols-from-binary
-      run: cargo build --verbose --release && \ # +nightly -Z strip=symbols
+      run: cargo build --verbose --release && \
         strip target/release/PROJECT_NAME && \
         mv target/release/PROJECT_NAME target/release/PROJECT_NAME_amd64
     - name: Test
