@@ -31,7 +31,12 @@ jobs:
 
     - name: Set project name
       run: |
-        cargo metadata --no-deps | jq .packages[0].name
+        echo "package_name=$(cargo metadata --no-deps | jq -r .packages[0].name)" >> $GITHUB_ENV
+
+    - name: Test env
+      run: |
+        env
+        echo "${{ env.package_name }}"
 
     # - name: Build
     #   # https://github.com/johnthagen/min-sized-rust#strip-symbols-from-binary
