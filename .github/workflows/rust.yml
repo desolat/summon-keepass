@@ -43,7 +43,8 @@ jobs:
       run: > 
         cargo build --verbose --release && 
         strip target/release/${PACKAGE_NAME} && 
-        mv target/release/${PACKAGE_NAME} target/release/${PACKAGE_NAME}_amd64
+        mv target/release/${PACKAGE_NAME} target/release/${PACKAGE_NAME}_amd64 &&
+        ls -al target/release
     # - name: Test
     #   run: cargo test --verbose
     # - name: Release 
