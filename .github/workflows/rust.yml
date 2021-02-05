@@ -15,6 +15,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: pkgs
+      run: |
+        apt list --installed | grep -E "^(bin|core)utils"
     - name: Checkout
       uses: actions/checkout@v2
     - name: Install latest rust toolchain
