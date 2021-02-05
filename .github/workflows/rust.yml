@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      PROJECT_NAME: {{PROJECT_NAME}}
+      PROJECT_NAME: ${{PROJECT_NAME}}
 
     steps:
     - name: pkgs
