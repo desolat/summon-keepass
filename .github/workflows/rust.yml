@@ -15,29 +15,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # - name: pkgs
-    #   run: |
-    #     echo $PATH
-    #     apt list --installed | grep -E "^(bin|core)utils"
-    # - name: Install latest rust toolchain
-    #   uses: actions-rs/toolchain@v1
-    #   with:
-    #     toolchain: stable
-    #     default: true
-    #     override: true
-
     - name: Checkout
       uses: actions/checkout@v2
-
-    - name: Set project name
+    - name: Get package name
       run: |
         echo "PACKAGE_NAME=$(cargo metadata --no-deps | jq -r .packages[0].name)" >> $GITHUB_ENV
-
-    # - name: Test env
-    #   run: |
-    #     env
-    #     echo "${{ env.PACKAGE_NAME }}"
-
     - name: Build
       # https://github.com/johnthagen/min-sized-rust#strip-symbols-from-binary
       run: > 
@@ -47,12 +29,12 @@ jobs:
         ls -al target/release
     # - name: Test
     #   run: cargo test --verbose
-    # - name: Release 
-    #   uses: softprops/action-gh-release@v1
-    #   if: startsWith(github.ref, 'refs/tags/')
-    #   with:
-    #     prerelease: true
-    #     files: |
-    #       target/release/${PROJECT_NAME}_amd64
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Release 
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        prerelease: true
+        files: |
+          target/release/${PACKAGE_NAME}_amd64
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
