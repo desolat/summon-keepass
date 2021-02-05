@@ -28,18 +28,22 @@ jobs:
         default: true
         override: true
     - name: Build
+      env:
+        PROJECT_NAME: "{{PROJECT_NAME}}"
       # https://github.com/johnthagen/min-sized-rust#strip-symbols-from-binary
       # https://github.com/actions/virtual-environments/issues/2621
       #strip target/release/PROJECT_NAME && \ 
-      run: cargo build --verbose --release && strip target/release/PROJECT_NAME && mv target/release/PROJECT_NAME target/release/PROJECT_NAME_amd64
+      run: cargo build --verbose --release && strip target/release/${PROJECT_NAME} && mv target/release/$[PROJECT_NAME} target/release/${PROJECT_NAME}_amd64
     - name: Test
       run: cargo test --verbose
     - name: Release 
       uses: softprops/action-gh-release@v1
+      env:
+        PROJECT_NAME: "{{PROJECT_NAME}}"
       if: startsWith(github.ref, 'refs/tags/')
       with:
         prerelease: true
         files: |
-          target/release/PROJECT_NAME_amd64
+          target/release/${PROJECT_NAME}_amd64
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
