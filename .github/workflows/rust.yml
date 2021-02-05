@@ -31,7 +31,7 @@ jobs:
       # https://github.com/johnthagen/min-sized-rust#strip-symbols-from-binary
       # https://github.com/actions/virtual-environments/issues/2621
       #strip target/release/PROJECT_NAME && \ 
-      run: cargo build --verbose --release && ls -al target/release  && ls -al target/release/deb 
+      run: cargo build --verbose --release && ls -al target/release  && ls -al target/release/debs && echo $CARGO_PKG_NAME
       #&& strip target/release/${PROJECT_NAME} && mv target/release/${PROJECT_NAME} target/release/${PROJECT_NAME}_amd64
     - name: Test
       run: cargo test --verbose
