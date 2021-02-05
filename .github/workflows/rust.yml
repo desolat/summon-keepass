@@ -15,8 +15,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Get package name
+      run: |
+        echo "PACKAGE_NAME=$(cargo metadata --no-deps | jq -r .packages[0].name)" >> $GITHUB_ENV
     - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      # https://github.com/johnthagen/min-sized-rust#strip-symbols-from-binary
+      run: > 
+        cargo build --verbose --release && 
+        strip target/release/${PACKAGE_NAME} && 
+        mv target/release/${PACKAGE_NAME} target/release/${PACKAGE_NAME}_amd64 &&
+        ls -al target/release
+    # - name: Test
+    #   run: cargo test --verbose
+    - name: Release 
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        prerelease: true
+        files: |
+          target/release/${PACKAGE_NAME}_amd64
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
