@@ -26,12 +26,13 @@ jobs:
     #     default: true
     #     override: true
 
+    - name: Checkout
+      uses: actions/checkout@v2
+
     - name: Set project name
       run: |
         cargo metadata --no-deps | jq .packages[0].name
 
-    # - name: Checkout
-    #   uses: actions/checkout@v2
     # - name: Build
     #   # https://github.com/johnthagen/min-sized-rust#strip-symbols-from-binary
     #   # https://github.com/actions/virtual-environments/issues/2621
