@@ -1,20 +1,20 @@
 summon-keepass
 ==============
 
-Simple [summon](https://conjurinc.github.io/summon/) provider that allows usage of Keepass kdbx database file.
+Simple [summon](https://cyberark.github.io/summon/) provider that allows usage of KeePass kdbx database files.
 
 Installation
 -----
 
-Download the tar file from the [latest release](../../releases), extract it and provide the executable to summon ([as per their docs](https://github.com/cyberark/summon/blob/master/provider/README.md)). Placing it in `/usr/local/lib/summon` is the easiest method.
+Download the archive for your OS from the [latest release](../../releases), extract it and provide the executable to summon [as a provider](https://cyberark.github.io/summon/#providers). 
 
-Create `.summon-keepass.ini` file in your `$HOME` directory with the following content:
+Alternatively there is an [install script](./install.sh) available.
+
+Create a `.summon-keepass.ini` file in your `$HOME` directory with the following content:
 
     [keepass_db]
     path=/path/to/your/keepass_database_file.kdbx
     pass=password to your keepass database
-
-Place `summon-keepass` in `/usr/local/lib/summon`
 
 Usage
 -----
@@ -26,10 +26,11 @@ Let's say you have the following entries in your `secrets.yml` file:
 
 `summon-keepass` will split each secret with `/` and then return the password from the database entry whose title matches the last part of the secret and is placed in correct group determined by previous parts of the secret.
 
-In that case Keepass database should look like this:
-![Keepass example](https://imgur.com/SPdha3h.png)
+In that case KeePass database should look like this:
+![KeePass example](https://imgur.com/SPdha3h.png)
 
 Todo
 ----
 - tests
-- error handling for incorrect config/keepass file path
+- get the KeePass DB password from an environment variable (preferred)
+- error handling for incorrect config/KeePass DB file path
