@@ -1,11 +1,7 @@
 name: Rust
+# inspired by https://alican.codes/rust-github-actions/ which is now outdated
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
+on: [push, pull_request]
 env:
   CARGO_TERM_COLOR: always
 
@@ -29,11 +25,29 @@ jobs:
         ls -al target/release
     # - name: Test
     #   run: cargo test --verbose
-    - name: Release 
+    - name: Check Tag
+      id: check-tag
+      run: |
+        if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo ::set-output name=release::true
+        fi
+        if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+-[^[:space:]]+$ ]]; then
+            echo ::set-output name=prerelease::true
+        fi
+    
+    - name: Create Prerelease 
       uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
+      if: steps.check-tag.outputs.prerelease == 'true'
       with:
         prerelease: true
+        files: |
+          target/release/${PACKAGE_NAME}_amd64
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create Release 
+      uses: softprops/action-gh-release@v1
+      if: steps.check-tag.outputs.release == 'true'
+      with:
         files: |
           target/release/${PACKAGE_NAME}_amd64
       env:
