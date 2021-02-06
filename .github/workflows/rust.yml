@@ -16,15 +16,26 @@ jobs:
     - name: Get package name
       run: |
         echo "PACKAGE_NAME=$(cargo metadata --no-deps | jq -r .packages[0].name)" >> $GITHUB_ENV
+    - name: Set target file name
+      run: |
+        echo "TARGET_FILE_NAME=${PACKAGE_NAME}-linux-amd64.tar.gz" >> $GITHUB_ENV
     - name: Build
       # https://github.com/johnthagen/min-sized-rust#strip-symbols-from-binary
+      #mv target/release/${PACKAGE_NAME} target/release/${TARGET_FILE_NAME}
       run: | 
         cargo build --verbose --release
         strip target/release/${PACKAGE_NAME} 
-        mv target/release/${PACKAGE_NAME} target/release/${PACKAGE_NAME}_amd64
         ls -al target/release
     # - name: Test
     #   run: cargo test --verbose
+    
+    - name: Package
+      uses: thedoctor0/zip-release@master
+      with:
+        filename: ${{ env.TARGET_FILE_NAME }}
+        path: target/release/${{ env.PACKAGE_NAME }}
+        type: tar
+
     - name: Check Tag
       id: check-tag
       run: |
@@ -35,20 +46,20 @@ jobs:
             echo ::set-output name=prerelease::true
         fi
     
-    - name: Create Prerelease 
+    - name: Prerelease 
       uses: softprops/action-gh-release@v1
       if: steps.check-tag.outputs.prerelease == 'true'
       with:
         prerelease: true
         files: |
-          target/release/${{ env.PACKAGE_NAME }}_amd64
+          ${{ env.TARGET_FILE_NAME }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Create Release 
+    - name: Release 
       uses: softprops/action-gh-release@v1
       if: steps.check-tag.outputs.release == 'true'
       with:
         files: |
-          target/release/${{ env.PACKAGE_NAME }}_amd64
+          ${{ env.TARGET_FILE_NAME }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
