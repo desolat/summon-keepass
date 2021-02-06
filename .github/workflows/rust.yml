@@ -18,10 +18,10 @@ jobs:
         echo "PACKAGE_NAME=$(cargo metadata --no-deps | jq -r .packages[0].name)" >> $GITHUB_ENV
     - name: Build
       # https://github.com/johnthagen/min-sized-rust#strip-symbols-from-binary
-      run: > 
-        cargo build --verbose --release && 
-        strip target/release/${PACKAGE_NAME} && 
-        mv target/release/${PACKAGE_NAME} target/release/${PACKAGE_NAME}_amd64 &&
+      run: | 
+        cargo build --verbose --release
+        strip target/release/${PACKAGE_NAME} 
+        mv target/release/${PACKAGE_NAME} target/release/${PACKAGE_NAME}_amd64
         ls -al target/release
     # - name: Test
     #   run: cargo test --verbose
@@ -41,7 +41,7 @@ jobs:
       with:
         prerelease: true
         files: |
-          target/release/${PACKAGE_NAME}_amd64
+          target/release/${{ env.PACKAGE_NAME }}_amd64
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Create Release 
@@ -49,6 +49,6 @@ jobs:
       if: steps.check-tag.outputs.release == 'true'
       with:
         files: |
-          target/release/${PACKAGE_NAME}_amd64
+          target/release/${{ env.PACKAGE_NAME }}_amd64
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
