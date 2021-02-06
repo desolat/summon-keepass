@@ -3,6 +3,8 @@
 set -e
 set -o pipefail
 
+# Install the latest release
+
 error() {
   echo "ERROR: $@" 1>&2
   echo "Exiting installer" 1>&2
@@ -14,7 +16,6 @@ API_BASE_URL="https://api.github.com/repos/desolat/summon-keepass"
 PROJECT_BASE_URL="https://github.com/desolat/summon-keepass"
 
 ARCH=`uname -m`
-
 if [ "${ARCH}" != "x86_64" ]; then
   error "$PROJECT only available for 64-bit systems"
 fi
@@ -65,9 +66,9 @@ get_latest_version() {
 }
 
 LATEST_VERSION=$(get_latest_version)
-echo "Using version number: $LATEST_VERSION"
+echo "Latest version: $LATEST_VERSION"
 
-FILE_NAME="$PROJECT-${KERNEL_NAME}-amd64"
+FILE_NAME="$PROJECT-${KERNEL_NAME}-amd64.tar.gz"
 URL="${PROJECT_BASE_URL}/releases/download/${LATEST_VERSION}/$FILE_NAME"
 
 FILE_PATH="${tmp_dir}/$FILE_NAME"

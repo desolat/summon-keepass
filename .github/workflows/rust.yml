@@ -21,11 +21,10 @@ jobs:
         echo "TARGET_FILE_NAME=${PACKAGE_NAME}-linux-amd64.tar.gz" >> $GITHUB_ENV
     - name: Build
       # https://github.com/johnthagen/min-sized-rust#strip-symbols-from-binary
-      #mv target/release/${PACKAGE_NAME} target/release/${TARGET_FILE_NAME}
       run: | 
         cargo build --verbose --release
         strip target/release/${PACKAGE_NAME} 
-        ls -al target/release
+        mv target/release/${PACKAGE_NAME} ${PACKAGE_NAME}
     # - name: Test
     #   run: cargo test --verbose
     
@@ -33,7 +32,7 @@ jobs:
       uses: thedoctor0/zip-release@master
       with:
         filename: ${{ env.TARGET_FILE_NAME }}
-        path: target/release/${{ env.PACKAGE_NAME }}
+        path: ${{ env.PACKAGE_NAME }}
         type: tar
 
     - name: Check Tag
