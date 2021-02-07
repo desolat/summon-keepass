@@ -77,7 +77,7 @@ do_download ${URL} ${FILE_PATH}
 TARGET_PATH="/usr/local/bin"
 echo "Installing $PROJECT ${LATEST_VERSION} into $TARGET_PATH"
 
-if [[ "$FILE_PATH" == *.tar.gz]]; then
+if [[ "$FILE_PATH" == *.tar.gz ]]; then
   if sudo -h >/dev/null 2>&1; then
     sudo tar -C $TARGET_PATH -o -zxvf ${FILE_PATH} >/dev/null
   else
