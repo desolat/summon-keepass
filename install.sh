@@ -3,7 +3,7 @@
 set -e
 set -o pipefail
 
-# Install the latest release
+# Install summon-keepass. Default is the latest version. Pass a valid version tag to install a dedicated version.
 
 error() {
   echo "ERROR: $@" 1>&2
@@ -11,9 +11,10 @@ error() {
   exit 1
 }
 
+VERSION=${1:-"latest"}
+
 PROJECT="summon-keepass"
-API_BASE_URL="https://api.github.com/repos/desolat/summon-keepass"
-PROJECT_BASE_URL="https://github.com/desolat/summon-keepass"
+REPO_NAME="desolat/summon-keepass"
 
 ARCH=`uname -m`
 if [ "${ARCH}" != "x86_64" ]; then
@@ -49,7 +50,7 @@ do_download() {
 
 # Get latest release from GitHub API
 get_latest_version() {
-  local LATEST_VERSION_URL="$API_BASE_URL/releases/latest"
+  local LATEST_VERSION_URL="https://api.github.com/repos/$REPO_NAME/releases/latest"
   local latest_payload
 
   if [[ $(command -v wget) ]]; then
@@ -65,17 +66,35 @@ get_latest_version() {
     sed -E 's/.*"([^"]+)".*/\1/' # Pluck JSON value
 }
 
-LATEST_VERSION=$(get_latest_version)
-echo "Latest version: $LATEST_VERSION"
+# Check if a release for this version exists
+check_version() {
+  local VERSION=$1
+  local RELEASE_URL="https://api.github.com/repos/$REPO_NAME/releases/tags/$VERSION" 
+
+  if [[ $(command -v wget) ]]; then
+    wget -q "$RELEASE_URL")
+  elif [[ $(command -v curl) ]]; then
+    curl --fail -sSL "$RELEASE_URL"
+  else
+    error "Could not find wget or curl"
+  fi
+}
+
+if [ $VERSION == "latest" ]; then
+  VERSION=$(get_latest_version)
+  echo "Latest version: $VERSION"
+else
+  check_version $VERSION
+fi
 
 FILE_NAME="$PROJECT-${KERNEL_NAME}-amd64.tar.gz"
-URL="${PROJECT_BASE_URL}/releases/download/${LATEST_VERSION}/$FILE_NAME"
+URL="https://github.com/$REPO_NAME/releases/download/${VERSION}/$FILE_NAME"
 
 FILE_PATH="${tmp_dir}/$FILE_NAME"
 do_download ${URL} ${FILE_PATH}
 
 TARGET_PATH="/usr/local/bin"
-echo "Installing $PROJECT ${LATEST_VERSION} into $TARGET_PATH"
+echo "Installing $PROJECT ${VERSION} into $TARGET_PATH"
 
 if [[ "$FILE_PATH" == *.tar.gz ]]; then
   if sudo -h >/dev/null 2>&1; then
