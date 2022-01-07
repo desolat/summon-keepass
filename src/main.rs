@@ -2,7 +2,7 @@ extern crate ini;
 extern crate keepass;
 
 use ini::Ini;
-use keepass::{Database, Node, Result};
+use keepass::{Database, NodeRef, Result};
 use std::env;
 use std::fs::File;
 use std::process;
@@ -33,7 +33,7 @@ fn main() -> Result<()> {
     let path = std::path::Path::new(keepass_db_path);
     let db = Database::open(&mut File::open(path)?, Some(keepass_db_pass), None)?;
 
-    if let Some(Node::Entry(e)) = db.root.get(&pass_path) {
+    if let Some(NodeRef::Entry(e)) = db.root.get(&pass_path) {
 	out_handle.write(e.get_password().unwrap().as_bytes()).unwrap();
 	out_handle.flush().unwrap();
 	process::exit(0);
