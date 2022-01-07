@@ -4,5 +4,5 @@ version = "0.2.1"
 authors = ["Marcin Skarbek <git@skarbek.name>"]
 
 [dependencies]
-keepass = "0.4.5"
+keepass = "0.4.9"
 rust-ini = "0.9.4"
