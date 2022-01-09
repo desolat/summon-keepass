@@ -28,17 +28,31 @@ fn main() -> Result<()> {
     let keepass_db_path = keepass_db.get("path").unwrap();
     let keepass_db_pass = keepass_db.get("pass").unwrap();
 
-    let pass_path = args[1].to_str().unwrap().split("/").collect::<Vec<&str>>();
-
-    let path = std::path::Path::new(keepass_db_path);
-    let db = Database::open(&mut File::open(path)?, Some(keepass_db_pass), None)?;
-
-    if let Some(NodeRef::Entry(e)) = db.root.get(&pass_path) {
-	out_handle.write(e.get_password().unwrap().as_bytes()).unwrap();
-	out_handle.flush().unwrap();
-	process::exit(0);
+    let db_path = std::path::Path::new(keepass_db_path);
+    let db = Database::open(&mut File::open(db_path)?, Some(keepass_db_pass), None)?;
+    
+    let secret_path = args[1].to_str().unwrap()
+    let secret_vec = secret_path.split("|").collect::<Vec<&str>>();
+    if secret_vec.len() == 2 {
+        let field = secret_vec[1]
     }
-    err_handle.write(format!("{} could not be retrieved", args[1].to_str().unwrap()).as_bytes()).unwrap();
+    else if secret_vec.len() == 1 {
+        let field = "Password"
+    }
+    else {
+        err_handle.write(format!("{} is no valid secret path", secret_path).as_bytes()).unwrap();
+        err_handle.flush().unwrap();
+        process::exit(2);
+
+    }
+    let entry_path = secret_vec[0].split("/").collect::<Vec<&str>>();
+    if let Some(NodeRef::Entry(e)) = db.root.get(&entry_path) {
+	    out_handle.write(e.get(field).unwrap().as_bytes()).unwrap();
+	    out_handle.flush().unwrap();
+	    process::exit(0);
+    }
+
+    err_handle.write(format!("{} could not be retrieved", secret_path).as_bytes()).unwrap();
     err_handle.flush().unwrap();
     process::exit(1);
 }

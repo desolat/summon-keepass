@@ -19,18 +19,21 @@ Create a `.summon-keepass.ini` file in your `$HOME` directory with the following
 Usage
 -----
 
-Let's say you have the following entries in your `secrets.yml` file:
+`summon-keepass` uses the following syntax for secrets:
+  
+    [group/subgroup/]entry[|field]
+
+By default the `Password` field value of the `entry` will be returned. If an alternative `field` name is being provided, the value of that field will be returned.
+
+Here's an example of a `secrets.yml` file:
 
     AWS_ACCESS_KEY_ID: !var aws/iam/user/robot/access_key_id
     AWS_SECRET_ACCESS_KEY: !var aws/iam/user/robot/secret_access_key
-
-`summon-keepass` will split each secret with `/` and then return the password from the database entry whose title matches the last part of the secret and is placed in correct group determined by previous parts of the secret.
-
-In that case KeePass database should look like this:
-![KeePass example](https://imgur.com/SPdha3h.png)
+    SSH_PRIV_KEY: !var:file ssh/some server|priv_key
 
 Todo
 ----
 - tests
 - get the KeePass DB password from an environment variable (preferred)
+- key file authentication
 - error handling for incorrect config/KeePass DB file path
