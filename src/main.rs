@@ -1,5 +1,6 @@
 extern crate ini;
 extern crate keepass;
+extern crate newline_converter;
 
 use ini::Ini;
 use keepass::{Database, NodeRef, Result};
