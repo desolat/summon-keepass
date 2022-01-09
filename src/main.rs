@@ -3,10 +3,13 @@ extern crate keepass;
 
 use ini::Ini;
 use keepass::{Database, NodeRef, Result};
+use newline_converter::dos2unix;
+
 use std::env;
 use std::fs::File;
 use std::process;
 use std::io::{self, Write};
+
 
 fn main() -> Result<()> {
     let stdout = io::stdout();
@@ -49,7 +52,7 @@ fn main() -> Result<()> {
     }
     let entry_path = secret_vec[0].split("/").collect::<Vec<&str>>();
     if let Some(NodeRef::Entry(e)) = db.root.get(&entry_path) {
-	    out_handle.write(e.get(field).unwrap().as_bytes()).unwrap();
+	    out_handle.write(dos2unix(e.get(field).unwrap()).as_bytes()).unwrap();
 	    out_handle.flush().unwrap();
 	    process::exit(0);
     }

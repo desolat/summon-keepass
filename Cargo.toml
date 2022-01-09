@@ -6,3 +6,4 @@ authors = ["Marcin Skarbek <git@skarbek.name>", "Christoph Jähnigen <desolat@nu
 [dependencies]
 keepass = "0.4.9"
 rust-ini = "0.9.4"
+newline-converter = "0.2.0"
