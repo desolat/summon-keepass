@@ -31,13 +31,15 @@ fn main() -> Result<()> {
     let db_path = std::path::Path::new(keepass_db_path);
     let db = Database::open(&mut File::open(db_path)?, Some(keepass_db_pass), None)?;
     
-    let secret_path = args[1].to_str().unwrap()
+    let secret_path = args[1].to_str().unwrap();
     let secret_vec = secret_path.split("|").collect::<Vec<&str>>();
+
+    let field;
     if secret_vec.len() == 2 {
-        let field = secret_vec[1]
+        field = secret_vec[1];
     }
     else if secret_vec.len() == 1 {
-        let field = "Password"
+        field = "Password";
     }
     else {
         err_handle.write(format!("{} is no valid secret path", secret_path).as_bytes()).unwrap();
