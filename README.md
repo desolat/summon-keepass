@@ -29,6 +29,7 @@ Here's an example of a `secrets.yml` file:
 
     AWS_ACCESS_KEY_ID: !var aws/iam/user/robot/access_key_id
     AWS_SECRET_ACCESS_KEY: !var aws/iam/user/robot/secret_access_key
+    SOME_USER_NAME: !var account|UserName
     SSH_PRIV_KEY: !var:file ssh/some server|priv_key
 
 Todo
