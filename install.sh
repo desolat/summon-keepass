@@ -69,7 +69,7 @@ get_latest_version() {
 # Check if a release for this version exists
 check_version() {
   local VERSION=$1
-  local RELEASE_URL="https://api.github.com/repos/$REPO_NAME/releases/tags/$VERSION" 
+  local RELEASE_URL="https://api.github.com/repos/$REPO_NAME/releases/tags/$VERSION"
 
   if [[ $(command -v wget) ]]; then
     wget -q "$RELEASE_URL"
@@ -102,7 +102,7 @@ if [[ "$FILE_PATH" == *.tar.gz ]]; then
   else
     tar -C $TARGET_PATH -o -zxvf ${FILE_PATH} >/dev/null
   fi
-else 
+else
   cp $FILE_PATH "${TARGET_PATH}"
 fi
 
