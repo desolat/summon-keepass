@@ -19,6 +19,17 @@ fn main() -> Result<()> {
     let mut err_handle = stderr.lock();
 
     let args: Vec<_> = env::args_os().collect();
+
+    // Handle version flag
+    if args.len() > 1 {
+        let arg = args[1].to_str().unwrap();
+        if arg == "-V" || arg == "--version" {
+            out_handle.write(format!("{}\n", env!("CARGO_PKG_VERSION")).as_bytes()).unwrap();
+            out_handle.flush().unwrap();
+            process::exit(0);
+        }
+    }
+
     if args.len() <= 1 {
         err_handle.write(b"no variable was provided").unwrap();
         err_handle.flush().unwrap();
