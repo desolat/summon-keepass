@@ -1,6 +1,6 @@
 [package]
 name = "summon-keepass"
-version = "0.3.1-rc.2"
+version = "0.3.0-rc.1"
 edition = "2021"
 authors = ["Marcin Skarbek <git@skarbek.name>", "Christoph Jähnigen <desolat@nuabaranda.net>"]
 
@@ -22,8 +22,8 @@ sign-tag = false
 push = false
 # Update version in Cargo.lock
 pre-release-commit-message = "chore: release {{version}}"
-# Tag format
-tag-prefix = "v"
+# Tag format (default tag-name is "{{prefix}}v{{version}}", so prefix should be empty)
+tag-prefix = ""
 tag-message = "Release {{version}}"
 # Don't publish to crates.io (this is a binary-only project)
 publish = false

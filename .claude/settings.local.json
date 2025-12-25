@@ -14,7 +14,8 @@
       "Bash(docker build:*)",
       "Bash(docker run:*)",
       "Bash(export PATH=\"/home/wsl/.cargo/bin:$PATH\")",
-      "Bash(cargo release --help:*)"
+      "Bash(cargo release --help:*)",
+      "Bash(git show:*)"
     ]
   }
 }
