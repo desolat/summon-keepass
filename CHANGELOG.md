@@ -7,8 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.3.1-rc.1] - 2025-12-25
-
 ### Added
 - Version flag support: `-V` and `--version` to display current version
 - Comprehensive integration test suite with 17 tests covering all functionality
@@ -18,24 +16,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - cargo-release configuration for automated version management and releases
 - CI validation to ensure tag versions match Cargo.toml
 - GitHub workflow for creating releases directly from GitHub UI
+- Support for retrieving custom fields from KeePass entries
+- Multi-line value support with DOS to Unix line ending conversion
 
 ### Fixed
 - Nonexistent field handling now gracefully exits with code 1 instead of panicking
 - Proper error messages when requesting fields that don't exist in KeePass entries
+- Various bug fixes and stability improvements
 
 ### Changed
 - Tests now run automatically in CI before building releases
 - Updated project to Rust 2021 edition for better ergonomics
 - Release process now uses cargo-release for consistency and automation
-
-## [0.3.0-beta.1] - 2022-01-09
-
-### Added
-- Support for retrieving custom fields from KeePass entries
-- Multi-line value support with DOS to Unix line ending conversion
-
-### Fixed
-- Various bug fixes and stability improvements
 
 ## [0.2.0] - Earlier release
 
