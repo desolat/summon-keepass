@@ -1,12 +1,13 @@
 # Stage 1: Cache dependencies
-FROM rust:1.83-bookworm as dependencies
+FROM rust:1.83-bookworm AS dependencies
 WORKDIR /build
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml ./
+# Note: Cargo.lock is in .gitignore, so not copied. Cargo will generate it.
 RUN mkdir src && echo "fn main() {}" > src/main.rs
 RUN cargo build --release && rm -rf src
 
 # Stage 2: Build application and tests
-FROM rust:1.83-bookworm as builder
+FROM rust:1.83-bookworm AS builder
 WORKDIR /build
 COPY --from=dependencies /build/target target
 COPY . .
@@ -24,7 +25,8 @@ RUN apt-get update && apt-get install -y \
 COPY --from=builder /build/target/release/summon-keepass /usr/local/bin/
 COPY --from=builder /build/target/release/deps /app/target/release/deps
 COPY tests /tests
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml ./
+COPY src ./src
 
 ENV HOME=/tmp/test-home
 ENV RUST_BACKTRACE=1
