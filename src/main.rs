@@ -64,9 +64,16 @@ fn main() -> Result<()> {
     }
     let entry_path = secret_vec[0].split("/").collect::<Vec<&str>>();
     if let Some(NodeRef::Entry(e)) = db.root.get(&entry_path) {
-	    out_handle.write(dos2unix(e.get(field).unwrap()).as_bytes()).unwrap();
-	    out_handle.flush().unwrap();
-	    process::exit(0);
+        // Check if the field exists
+        if let Some(field_value) = e.get(field) {
+            out_handle.write(dos2unix(field_value).as_bytes()).unwrap();
+            out_handle.flush().unwrap();
+            process::exit(0);
+        } else {
+            err_handle.write(format!("{} could not be retrieved", secret_path).as_bytes()).unwrap();
+            err_handle.flush().unwrap();
+            process::exit(1);
+        }
     }
 
     err_handle.write(format!("{} could not be retrieved", secret_path).as_bytes()).unwrap();

@@ -7,7 +7,12 @@
       "Bash(cargo doc:*)",
       "WebFetch(domain:docs.rs)",
       "WebFetch(domain:github.com)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(HOME=/mnt/d/projects/summon-keepass/tests/fixtures cargo test:*)",
+      "Bash(export PATH=\"$HOME/.cargo/bin:$PATH\")",
+      "Bash(rustup default:*)",
+      "Bash(docker build:*)",
+      "Bash(docker run:*)"
     ]
   }
 }
