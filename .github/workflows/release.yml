@@ -61,7 +61,7 @@ jobs:
         fi
 
         if [ -n "${{ github.event.inputs.pre_release }}" ]; then
-          RELEASE_CMD="$RELEASE_CMD --pre-release ${{ github.event.inputs.pre_release }}"
+          RELEASE_CMD="$RELEASE_CMD --pre-release=${{ github.event.inputs.pre_release }}"
         fi
 
         echo "command=$RELEASE_CMD" >> $GITHUB_OUTPUT
@@ -80,8 +80,8 @@ jobs:
     - name: Push changes
       run: |
         echo "⬆️ Pushing commit and tags..."
-        git push
-        git push --tags
+        # Push commit and tags together to trigger workflow only once
+        git push --follow-tags
 
     - name: Get version
       id: get-version
