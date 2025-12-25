@@ -24,9 +24,9 @@ RUN apt-get update && apt-get install -y \
 
 COPY --from=builder /build/target/release/summon-keepass /usr/local/bin/
 COPY --from=builder /build/target/release/deps /app/target/release/deps
-COPY tests /tests
 COPY Cargo.toml ./
 COPY src ./src
+COPY tests ./tests
 
 ENV HOME=/tmp/test-home
 ENV RUST_BACKTRACE=1

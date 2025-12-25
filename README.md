@@ -37,7 +37,7 @@ Testing
 
 Integration tests validate all functionality using a containerized environment.
 
-### Running tests locally with Docker:
+### Running tests with Docker:
 ```bash
 docker build -f Dockerfile.test -t summon-keepass:test .
 docker run --rm summon-keepass:test

@@ -27,10 +27,7 @@ jobs:
         load: true
 
     - name: Run integration tests
-      run: |
-        docker run --rm \
-          -v ${{ github.workspace }}/tests:/tests \
-          summon-keepass:test
+      run: docker run --rm summon-keepass:test
 
   build:
     needs: test
