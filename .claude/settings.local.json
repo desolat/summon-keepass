@@ -12,7 +12,9 @@
       "Bash(export PATH=\"$HOME/.cargo/bin:$PATH\")",
       "Bash(rustup default:*)",
       "Bash(docker build:*)",
-      "Bash(docker run:*)"
+      "Bash(docker run:*)",
+      "Bash(export PATH=\"/home/wsl/.cargo/bin:$PATH\")",
+      "Bash(cargo release --help:*)"
     ]
   }
 }

@@ -17,9 +17,14 @@ on:
         required: false
         type: string
       pre_release:
-        description: 'Pre-release identifier (e.g., beta, alpha, rc)'
+        description: 'Pre-release type: alpha, beta, or rc (overrides version type if specified)'
         required: false
-        type: string
+        type: choice
+        options:
+          - ''
+          - alpha
+          - beta
+          - rc
 
 jobs:
   release:
@@ -50,7 +55,11 @@ jobs:
     - name: Determine release command
       id: release-cmd
       run: |
-        if [ "${{ github.event.inputs.version }}" = "custom" ]; then
+        # Pre-releases: cargo-release accepts alpha, beta, rc as direct level arguments
+        if [ -n "${{ github.event.inputs.pre_release }}" ]; then
+          RELEASE_CMD="${{ github.event.inputs.pre_release }}"
+          echo "📦 Creating pre-release: ${{ github.event.inputs.pre_release }}"
+        elif [ "${{ github.event.inputs.version }}" = "custom" ]; then
           if [ -z "${{ github.event.inputs.custom_version }}" ]; then
             echo "Error: Custom version is required when 'custom' is selected"
             exit 1
@@ -58,10 +67,6 @@ jobs:
           RELEASE_CMD="${{ github.event.inputs.custom_version }}"
         else
           RELEASE_CMD="${{ github.event.inputs.version }}"
-        fi
-
-        if [ -n "${{ github.event.inputs.pre_release }}" ]; then
-          RELEASE_CMD="$RELEASE_CMD --pre-release=${{ github.event.inputs.pre_release }}"
         fi
 
         echo "command=$RELEASE_CMD" >> $GITHUB_OUTPUT

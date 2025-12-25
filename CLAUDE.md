@@ -104,7 +104,12 @@ There are two ways to create a release:
      - **minor**: 0.3.0 → 0.4.0 (new features)
      - **major**: 0.3.0 → 1.0.0 (breaking changes)
      - **custom**: Specify exact version (e.g., 0.4.0)
-   - Optionally specify pre-release identifier (e.g., "beta" for 0.4.0-beta.1)
+   - For pre-releases:
+     - Select pre-release type: alpha, beta, or rc (overrides version type)
+     - Examples:
+       - alpha: 0.3.0 → 0.3.1-alpha.1
+       - beta: 0.3.1-alpha.1 → 0.3.1-beta.1
+       - rc: 0.3.1-beta.1 → 0.3.1-rc.1
    - Click "Run workflow"
 
 3. **The workflow will:**
@@ -143,8 +148,14 @@ cargo install cargo-release
    # For specific version
    cargo release 0.4.0 --dry-run
 
-   # For pre-release (0.3.0 -> 0.4.0-beta.1)
-   cargo release minor --pre-release beta --dry-run
+   # For alpha pre-release (0.3.0 -> 0.3.1-alpha.1)
+   cargo release alpha --dry-run
+
+   # For beta pre-release (0.3.1-alpha.1 -> 0.3.1-beta.1)
+   cargo release beta --dry-run
+
+   # For release candidate (0.3.1-beta.1 -> 0.3.1-rc.1)
+   cargo release rc --dry-run
    ```
 
 3. **Review the dry-run output. cargo-release will:**
