@@ -112,17 +112,18 @@ There are two ways to create a release:
 2. **Navigate to Actions → Create Release:**
    - Go to https://github.com/desolat/summon-keepass/actions/workflows/release.yml
    - Click "Run workflow"
-   - Select release type:
+   - **For regular releases**, select version type:
      - **patch**: 0.3.0 → 0.3.1 (bug fixes)
      - **minor**: 0.3.0 → 0.4.0 (new features)
      - **major**: 0.3.0 → 1.0.0 (breaking changes)
      - **custom**: Specify exact version (e.g., 0.4.0)
-   - For pre-releases:
-     - Select pre-release type: alpha, beta, or rc (overrides version type)
-     - Examples:
-       - alpha: 0.3.0 → 0.3.1-alpha.1
-       - beta: 0.3.1-alpha.1 → 0.3.1-beta.1
-       - rc: 0.3.1-beta.1 → 0.3.1-rc.1
+     - Leave pre_release empty
+   - **For pre-releases**, select pre-release type (version type is ignored):
+     - **rc**: 0.3.0 → 0.3.0-rc.1 (release candidate of current version)
+     - **alpha**: 0.3.0 → 0.3.0-alpha.1
+     - **beta**: 0.3.0-alpha.1 → 0.3.0-beta.1 (promotes from alpha to beta)
+     - **rc**: 0.3.0-beta.1 → 0.3.0-rc.1 (promotes from beta to rc)
+     - Subsequent runs increment: 0.3.0-rc.1 → 0.3.0-rc.2
    - Click "Run workflow"
 
 3. **The workflow will automatically:**
@@ -226,6 +227,13 @@ If you need to create a release manually without cargo-release:
    - For replacements to run during alpha/beta/rc releases, add `prerelease = true`
    - Example: `{file="...", search="...", replace="...", prerelease=true}`
    - Without this, CHANGELOG and test versions won't update during pre-releases
+
+3. **Pre-release levels work on the current version:**
+   - `cargo release alpha` from `0.3.0` → `0.3.0-alpha.1` (NOT 0.3.1-alpha.1)
+   - `cargo release beta` from `0.3.0-alpha.1` → `0.3.0-beta.1` (promotes alpha to beta)
+   - `cargo release rc` from `0.3.0-beta.1` → `0.3.0-rc.1` (promotes beta to rc)
+   - Subsequent runs increment: `0.3.0-rc.1` → `0.3.0-rc.2`
+   - To release a pre-release of a NEW version, first bump version in Cargo.toml manually, then run pre-release
 
 ### cargo-release Configuration
 
