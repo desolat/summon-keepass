@@ -8,14 +8,14 @@ use common::*;
 fn test_version_flag_short() {
     let (stdout, stderr, exit_code) = run_summon_keepass(&["-V"]);
     assert_success(&stdout, &stderr, exit_code);
-    assert!(stdout.contains("0.3.0"), "Version output should contain '0.3.0', got: {}", stdout);
+    assert!(stdout.contains("0.3.1-rc.1"), "Version output should contain '0.3.0', got: {}", stdout);
 }
 
 #[test]
 fn test_version_flag_long() {
     let (stdout, stderr, exit_code) = run_summon_keepass(&["--version"]);
     assert_success(&stdout, &stderr, exit_code);
-    assert!(stdout.contains("0.3.0"), "Version output should contain '0.3.0', got: {}", stdout);
+    assert!(stdout.contains("0.3.1-rc.1"), "Version output should contain '0.3.0', got: {}", stdout);
 }
 
 // ===== Basic Retrieval Tests =====
