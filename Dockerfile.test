@@ -1,0 +1,33 @@
+# Stage 1: Cache dependencies
+FROM rust:1.83-bookworm as dependencies
+WORKDIR /build
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && echo "fn main() {}" > src/main.rs
+RUN cargo build --release && rm -rf src
+
+# Stage 2: Build application and tests
+FROM rust:1.83-bookworm as builder
+WORKDIR /build
+COPY --from=dependencies /build/target target
+COPY . .
+RUN cargo build --release
+RUN cargo test --release --no-run
+
+# Stage 3: Test runtime
+FROM rust:1.83-bookworm
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    libssl3 ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /build/target/release/summon-keepass /usr/local/bin/
+COPY --from=builder /build/target/release/deps /app/target/release/deps
+COPY tests /tests
+COPY Cargo.toml Cargo.lock ./
+
+ENV HOME=/tmp/test-home
+ENV RUST_BACKTRACE=1
+RUN mkdir -p ${HOME}
+
+CMD ["cargo", "test", "--release", "--", "--test-threads=1", "--nocapture"]

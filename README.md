@@ -32,9 +32,27 @@ Here's an example of a `secrets.yml` file:
     SOME_USER_NAME: !var account|UserName
     SSH_PRIV_KEY: !var:file ssh/some server|priv_key
 
+Testing
+-------
+
+Integration tests validate all functionality using a containerized environment.
+
+### Running tests locally with Docker:
+```bash
+docker build -f Dockerfile.test -t summon-keepass:test .
+docker run --rm summon-keepass:test
+```
+
+### Running tests with Rust toolchain:
+```bash
+export HOME=$(pwd)/tests/fixtures
+cargo test
+```
+
+Test database: `tests/fixtures/test-database.kdbx` (password: `test123`)
+
 Todo
 ----
-- tests
 - get the KeePass DB password from an environment variable (preferred)
 - key file authentication
 - error handling for incorrect config/KeePass DB file path

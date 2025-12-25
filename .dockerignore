@@ -1,0 +1,10 @@
+target/
+.git/
+.github/
+create_test_db.py
+create_test_db.rs
+.gitignore
+README.md
+CLAUDE.md
+install.sh
+LICENSE
