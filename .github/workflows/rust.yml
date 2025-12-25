@@ -6,8 +6,34 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  test:
+    runs-on: ubuntu-latest
 
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build test Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: ./Dockerfile.test
+        tags: summon-keepass:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        load: true
+
+    - name: Run integration tests
+      run: |
+        docker run --rm \
+          -v ${{ github.workspace }}/tests:/tests \
+          summon-keepass:test
+
+  build:
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
@@ -21,13 +47,11 @@ jobs:
         echo "TARGET_FILE_NAME=${PACKAGE_NAME}-linux-amd64.tar.gz" >> $GITHUB_ENV
     - name: Build
       # https://github.com/johnthagen/min-sized-rust#strip-symbols-from-binary
-      run: | 
+      run: |
         cargo build --verbose --release
-        strip target/release/${PACKAGE_NAME} 
+        strip target/release/${PACKAGE_NAME}
         mv target/release/${PACKAGE_NAME} ${PACKAGE_NAME}
-    # - name: Test
-    #   run: cargo test --verbose
-    
+
     - name: Package
       uses: thedoctor0/zip-release@master
       with:
