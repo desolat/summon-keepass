@@ -1,6 +1,6 @@
 [package]
 name = "summon-keepass"
-version = "0.3.0-rc.2"
+version = "0.3.0"
 edition = "2021"
 authors = ["Marcin Skarbek <git@skarbek.name>", "Christoph Jähnigen <desolat@nuabaranda.net>"]
 
@@ -30,9 +30,9 @@ publish = false
 # Pre-release replacements in files
 pre-release-replacements = [
   # Update version in integration tests
-  {file="tests/integration_test.rs", search="contains\\(\"[0-9.]+\"\\)", replace="contains(\"{{version}}\")", exactly=2},
+  {file="tests/integration_test.rs", search="contains\\(\"[0-9.]+\"\\)", replace="contains(\"{{version}}\")", exactly=2, prerelease=true},
   # Update CHANGELOG.md - replace Unreleased header with version and date
-  {file="CHANGELOG.md", search="## \\[Unreleased\\]", replace="## [Unreleased]\n\n## [{{version}}] - {{date}}", exactly=1},
+  {file="CHANGELOG.md", search="## \\[Unreleased\\]", replace="## [Unreleased]\n\n## [{{version}}] - {{date}}", exactly=1, prerelease=true},
   # Update comparison links in CHANGELOG.md
-  {file="CHANGELOG.md", search="\\[Unreleased\\]: https://github.com/desolat/summon-keepass/compare/v([0-9.]+(-[a-z0-9.]+)?)...HEAD", replace="[Unreleased]: https://github.com/desolat/summon-keepass/compare/v{{version}}...HEAD\n[{{version}}]: https://github.com/desolat/summon-keepass/compare/v$1...v{{version}}", exactly=1},
+  {file="CHANGELOG.md", search="\\[Unreleased\\]: https://github.com/desolat/summon-keepass/compare/v([0-9.]+(-[a-z0-9.]+)?)...HEAD", replace="[Unreleased]: https://github.com/desolat/summon-keepass/compare/v{{version}}...HEAD\n[{{version}}]: https://github.com/desolat/summon-keepass/compare/v$1...v{{version}}", exactly=1, prerelease=true},
 ]

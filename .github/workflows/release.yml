@@ -82,22 +82,67 @@ jobs:
         echo "🚀 Executing release..."
         cargo release ${{ steps.release-cmd.outputs.command }} --execute --no-confirm
 
-    - name: Push changes
-      run: |
-        echo "⬆️ Pushing commit and tags..."
-        # Push commit and tags together to trigger workflow only once
-        git push --follow-tags
-
-    - name: Get version
+    - name: Get version and package info
       id: get-version
       run: |
         VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+        PACKAGE_NAME=$(cargo metadata --no-deps | jq -r .packages[0].name)
         echo "version=$VERSION" >> $GITHUB_OUTPUT
-        echo "📌 Released version: $VERSION"
+        echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
+        echo "target_file=${PACKAGE_NAME}-linux-amd64.tar.gz" >> $GITHUB_OUTPUT
+        echo "📌 Version: $VERSION"
+        echo "📦 Package: $PACKAGE_NAME"
 
-    - name: Create GitHub Release draft
+    - name: Build binary
       run: |
-        echo "✅ Release commit and tag pushed successfully!"
-        echo "🏗️  The build workflow will now run and create the GitHub release."
-        echo "📋 Version: v${{ steps.get-version.outputs.version }}"
-        echo "🔗 Monitor the build at: ${{ github.server_url }}/${{ github.repository }}/actions"
+        echo "🔨 Building release binary..."
+        cargo build --verbose --release
+        strip target/release/${{ steps.get-version.outputs.package_name }}
+        mv target/release/${{ steps.get-version.outputs.package_name }} ${{ steps.get-version.outputs.package_name }}
+
+    - name: Package binary
+      uses: thedoctor0/zip-release@master
+      with:
+        filename: ${{ steps.get-version.outputs.target_file }}
+        path: ${{ steps.get-version.outputs.package_name }}
+        type: tar
+
+    - name: Determine release type
+      id: release-type
+      run: |
+        VERSION="${{ steps.get-version.outputs.version }}"
+        # Check if version contains pre-release identifier (-, alpha, beta, rc)
+        if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          echo "📦 Creating stable release: v$VERSION"
+        else
+          echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          echo "📦 Creating pre-release: v$VERSION"
+        fi
+
+    - name: Extract changelog
+      id: changelog
+      run: |
+        VERSION="${{ steps.get-version.outputs.version }}"
+        # Extract the section for this version from CHANGELOG.md
+        awk "BEGIN{p=0} /^## \[${VERSION}\]/{p=1; next} /^## \[/ && p{exit} p" CHANGELOG.md > /tmp/changelog.txt
+        # If empty, fall back to a default message
+        if [ ! -s /tmp/changelog.txt ]; then
+          echo "Release ${VERSION}" > /tmp/changelog.txt
+        fi
+        echo "changelog_file=/tmp/changelog.txt" >> $GITHUB_OUTPUT
+
+    - name: Push changes
+      run: |
+        echo "⬆️ Pushing commit and tags..."
+        git push --follow-tags
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.get-version.outputs.version }}
+        prerelease: ${{ steps.release-type.outputs.is_prerelease }}
+        files: ${{ steps.get-version.outputs.target_file }}
+        body_path: ${{ steps.changelog.outputs.changelog_file }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

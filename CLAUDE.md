@@ -78,15 +78,28 @@ pass=password to your keepass database
 
 This project uses [cargo-release](https://github.com/crate-ci/cargo-release) to automate version management and releases.
 
-The GitHub Actions workflow (`.github/workflows/rust.yml`) automatically:
-1. Runs integration tests in Docker container
-2. Builds the release binary (only if tests pass)
-3. Strips symbols for smaller binary size
-4. Packages as `summon-keepass-linux-amd64.tar.gz`
-5. Extracts changelog from `CHANGELOG.md` for the release version
-6. Creates GitHub releases for version tags:
-   - `v1.2.3` format creates a full release
-   - `v1.2.3-beta.1` format creates a pre-release
+### GitHub Actions Workflows
+
+**`.github/workflows/release.yml`** - Automated Release Creation (Recommended)
+- **Trigger:** Manual via GitHub UI ("Run workflow" button)
+- **Purpose:** Complete end-to-end release process
+- **Steps:**
+  1. Runs cargo-release (version bump, CHANGELOG update, tag creation)
+  2. Builds release binary with optimizations
+  3. Strips symbols for smaller binary size
+  4. Packages as `summon-keepass-linux-amd64.tar.gz`
+  5. Pushes commit and tag to repository
+  6. Extracts changelog from `CHANGELOG.md` for the release version
+  7. Creates GitHub Release with binary artifact
+  8. Automatically determines release vs pre-release based on version format
+
+**`.github/workflows/rust.yml`** - Continuous Integration + Fallback
+- **Trigger:** Automatic on every push and pull request
+- **Purpose:**
+  1. **CI Testing:** Runs integration tests in Docker on all pushes/PRs
+  2. **Fallback Release:** Creates releases for manually pushed tags
+- **When it creates releases:** Only when a tag matching `v*` is manually pushed via git
+- **Note:** The release.yml workflow is preferred for creating releases
 
 ### Creating a Release
 
@@ -112,16 +125,18 @@ There are two ways to create a release:
        - rc: 0.3.1-beta.1 → 0.3.1-rc.1
    - Click "Run workflow"
 
-3. **The workflow will:**
+3. **The workflow will automatically:**
    - Run cargo-release with dry-run first (for validation)
    - Update version in `Cargo.toml`, tests, and `CHANGELOG.md`
    - Create commit: "chore: release X.Y.Z"
-   - Create and push tag `vX.Y.Z`
-   - Trigger the build workflow automatically
+   - Create tag `vX.Y.Z`
+   - Build the release binary
+   - Package it as `summon-keepass-linux-amd64.tar.gz`
+   - Push commit and tag to GitHub
+   - Create GitHub Release with changelog and binary artifact
+   - Mark as pre-release if version contains `-alpha`, `-beta`, or `-rc`
 
-4. **Monitor the workflows:**
-   - Release workflow: Creates the commit and tag
-   - Build workflow: Runs tests and creates GitHub release
+4. **Done!** The release is published at: https://github.com/desolat/summon-keepass/releases
 
 #### Method 2: Local cargo-release
 
@@ -196,6 +211,21 @@ If you need to create a release manually without cargo-release:
 5. Commit: `git commit -m "chore: release X.Y.Z"`
 6. Tag: `git tag vX.Y.Z`
 7. Push: `git push && git push origin vX.Y.Z`
+
+### cargo-release Configuration Notes
+
+**Important configuration details in Cargo.toml:**
+
+1. **tag-prefix must be empty string:**
+   - cargo-release's default tag-name template is `"{{prefix}}v{{version}}"`
+   - Setting `tag-prefix = "v"` creates tags like `vv0.3.1-rc.1` (double "vv")
+   - Correct configuration: `tag-prefix = ""` produces tags like `v0.3.1-rc.1`
+
+2. **pre-release-replacements require prerelease = true:**
+   - By default, `pre-release-replacements` only run for standard releases
+   - For replacements to run during alpha/beta/rc releases, add `prerelease = true`
+   - Example: `{file="...", search="...", replace="...", prerelease=true}`
+   - Without this, CHANGELOG and test versions won't update during pre-releases
 
 ### cargo-release Configuration
 

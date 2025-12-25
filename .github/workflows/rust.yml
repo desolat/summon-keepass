@@ -1,5 +1,9 @@
-name: Rust
-# inspired by https://alican.codes/rust-github-actions/ which is now outdated
+name: Rust CI
+# This workflow provides:
+# 1. Continuous Integration - runs tests on every push/PR
+# 2. Fallback builds - creates releases for manually pushed tags
+#
+# For automated releases, use the "Create Release" workflow instead (.github/workflows/release.yml)
 
 on: [push, pull_request]
 env:
