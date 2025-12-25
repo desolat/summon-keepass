@@ -51,6 +51,26 @@ cargo test
 
 Test database: `tests/fixtures/test-database.kdbx` (password: `test123`)
 
+Releases
+--------
+
+This project uses [cargo-release](https://github.com/crate-ci/cargo-release) for automated version management.
+
+**Creating a release via GitHub UI (recommended):**
+1. Go to [Actions → Create Release](../../actions/workflows/release.yml)
+2. Click "Run workflow" and select release type (patch/minor/major)
+3. The workflow handles everything automatically
+
+**Creating a release locally:**
+```bash
+cargo install cargo-release
+cargo release minor --dry-run  # Preview changes
+cargo release minor            # Execute release
+git push && git push --tags    # Push to trigger CI
+```
+
+See [CLAUDE.md](CLAUDE.md#release-process) for detailed instructions.
+
 Todo
 ----
 - get the KeePass DB password from an environment variable (preferred)

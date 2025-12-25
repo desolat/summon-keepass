@@ -1,0 +1,98 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release type or specific version'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - custom
+      custom_version:
+        description: 'Custom version (only if "custom" is selected)'
+        required: false
+        type: string
+      pre_release:
+        description: 'Pre-release identifier (e.g., beta, alpha, rc)'
+        required: false
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Configure Git
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Set up Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+
+    - name: Install cargo-release
+      run: cargo install cargo-release
+
+    - name: Determine release command
+      id: release-cmd
+      run: |
+        if [ "${{ github.event.inputs.version }}" = "custom" ]; then
+          if [ -z "${{ github.event.inputs.custom_version }}" ]; then
+            echo "Error: Custom version is required when 'custom' is selected"
+            exit 1
+          fi
+          RELEASE_CMD="${{ github.event.inputs.custom_version }}"
+        else
+          RELEASE_CMD="${{ github.event.inputs.version }}"
+        fi
+
+        if [ -n "${{ github.event.inputs.pre_release }}" ]; then
+          RELEASE_CMD="$RELEASE_CMD --pre-release ${{ github.event.inputs.pre_release }}"
+        fi
+
+        echo "command=$RELEASE_CMD" >> $GITHUB_OUTPUT
+        echo "📦 Will execute: cargo release $RELEASE_CMD"
+
+    - name: Dry-run release
+      run: |
+        echo "🔍 Running dry-run first..."
+        cargo release ${{ steps.release-cmd.outputs.command }} --dry-run --no-confirm
+
+    - name: Execute release
+      run: |
+        echo "🚀 Executing release..."
+        cargo release ${{ steps.release-cmd.outputs.command }} --execute --no-confirm
+
+    - name: Push changes
+      run: |
+        echo "⬆️ Pushing commit and tags..."
+        git push
+        git push --tags
+
+    - name: Get version
+      id: get-version
+      run: |
+        VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "📌 Released version: $VERSION"
+
+    - name: Create GitHub Release draft
+      run: |
+        echo "✅ Release commit and tag pushed successfully!"
+        echo "🏗️  The build workflow will now run and create the GitHub release."
+        echo "📋 Version: v${{ steps.get-version.outputs.version }}"
+        echo "🔗 Monitor the build at: ${{ github.server_url }}/${{ github.repository }}/actions"

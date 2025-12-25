@@ -76,13 +76,123 @@ pass=password to your keepass database
 
 ## Release Process
 
+This project uses [cargo-release](https://github.com/crate-ci/cargo-release) to automate version management and releases.
+
 The GitHub Actions workflow (`.github/workflows/rust.yml`) automatically:
-1. Builds the release binary
-2. Strips symbols for smaller binary size
-3. Packages as `summon-keepass-linux-amd64.tar.gz`
-4. Creates GitHub releases for version tags:
+1. Runs integration tests in Docker container
+2. Builds the release binary (only if tests pass)
+3. Strips symbols for smaller binary size
+4. Packages as `summon-keepass-linux-amd64.tar.gz`
+5. Extracts changelog from `CHANGELOG.md` for the release version
+6. Creates GitHub releases for version tags:
    - `v1.2.3` format creates a full release
    - `v1.2.3-beta.1` format creates a pre-release
+
+### Creating a Release
+
+There are two ways to create a release:
+
+#### Method 1: GitHub UI (Recommended)
+
+1. **Ensure all changes are committed and documented in CHANGELOG.md under `[Unreleased]`**
+
+2. **Navigate to Actions → Create Release:**
+   - Go to https://github.com/desolat/summon-keepass/actions/workflows/release.yml
+   - Click "Run workflow"
+   - Select release type:
+     - **patch**: 0.3.0 → 0.3.1 (bug fixes)
+     - **minor**: 0.3.0 → 0.4.0 (new features)
+     - **major**: 0.3.0 → 1.0.0 (breaking changes)
+     - **custom**: Specify exact version (e.g., 0.4.0)
+   - Optionally specify pre-release identifier (e.g., "beta" for 0.4.0-beta.1)
+   - Click "Run workflow"
+
+3. **The workflow will:**
+   - Run cargo-release with dry-run first (for validation)
+   - Update version in `Cargo.toml`, tests, and `CHANGELOG.md`
+   - Create commit: "chore: release X.Y.Z"
+   - Create and push tag `vX.Y.Z`
+   - Trigger the build workflow automatically
+
+4. **Monitor the workflows:**
+   - Release workflow: Creates the commit and tag
+   - Build workflow: Runs tests and creates GitHub release
+
+#### Method 2: Local cargo-release
+
+**Prerequisites:**
+```bash
+cargo install cargo-release
+```
+
+**Release Process:**
+
+1. **Ensure all changes are committed and documented in CHANGELOG.md under `[Unreleased]`**
+
+2. **Perform a dry-run to preview changes:**
+   ```bash
+   # For patch release (0.3.0 -> 0.3.1)
+   cargo release patch --dry-run
+
+   # For minor release (0.3.0 -> 0.4.0)
+   cargo release minor --dry-run
+
+   # For major release (0.3.0 -> 1.0.0)
+   cargo release major --dry-run
+
+   # For specific version
+   cargo release 0.4.0 --dry-run
+
+   # For pre-release (0.3.0 -> 0.4.0-beta.1)
+   cargo release minor --pre-release beta --dry-run
+   ```
+
+3. **Review the dry-run output. cargo-release will:**
+   - Update version in `Cargo.toml`
+   - Update version in `tests/integration_test.rs`
+   - Update `CHANGELOG.md` (move Unreleased to versioned section with date)
+   - Update changelog comparison links
+   - Create a commit with message "chore: release X.Y.Z"
+   - Create a git tag `vX.Y.Z`
+
+4. **Execute the release (without --dry-run):**
+   ```bash
+   cargo release minor
+   ```
+
+5. **Review the commit and tag that were created:**
+   ```bash
+   git log -1
+   git tag -l
+   ```
+
+6. **Push the commit and tag to trigger CI:**
+   ```bash
+   git push
+   git push --tags
+   ```
+
+7. **GitHub Actions will automatically build, test, and create the GitHub release with changelog**
+
+### Manual Release (Not Recommended)
+
+If you need to create a release manually without cargo-release:
+
+1. Update version in `Cargo.toml`
+2. Update version expectations in `tests/integration_test.rs`
+3. Move unreleased changes in `CHANGELOG.md` to new version header
+4. Update changelog comparison links
+5. Commit: `git commit -m "chore: release X.Y.Z"`
+6. Tag: `git tag vX.Y.Z`
+7. Push: `git push && git push origin vX.Y.Z`
+
+### cargo-release Configuration
+
+The release behavior is configured in `Cargo.toml` under `[package.metadata.release]`:
+- **No automatic push**: You must manually push after reviewing
+- **No crates.io publish**: This is a binary-only project
+- **Automatic file updates**: Version numbers updated in tests and CHANGELOG
+- **Consistent commit messages**: "chore: release X.Y.Z"
 
 ## Known Issues and Todo Items
 
