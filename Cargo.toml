@@ -30,7 +30,8 @@ publish = false
 # Pre-release replacements in files
 pre-release-replacements = [
   # Update CHANGELOG.md - replace Unreleased header with version and date
-  {file="CHANGELOG.md", search="## \\[Unreleased\\]", replace="## [Unreleased]\n\n## [{{version}}] - {{date}}", exactly=1, prerelease=true},
+  # NOTE: prerelease=false means this only runs for final releases, not alpha/beta/rc
+  {file="CHANGELOG.md", search="## \\[Unreleased\\]", replace="## [Unreleased]\n\n## [{{version}}] - {{date}}", exactly=1, prerelease=false},
   # Update comparison links in CHANGELOG.md
-  {file="CHANGELOG.md", search="\\[Unreleased\\]: https://github.com/desolat/summon-keepass/compare/v([0-9.]+(-[a-z0-9.]+)?)...HEAD", replace="[Unreleased]: https://github.com/desolat/summon-keepass/compare/v{{version}}...HEAD\n[{{version}}]: https://github.com/desolat/summon-keepass/compare/v$1...v{{version}}", exactly=1, prerelease=true},
+  {file="CHANGELOG.md", search="\\[Unreleased\\]: https://github.com/desolat/summon-keepass/compare/v([0-9.]+(-[a-z0-9.]+)?)...HEAD", replace="[Unreleased]: https://github.com/desolat/summon-keepass/compare/v{{version}}...HEAD\n[{{version}}]: https://github.com/desolat/summon-keepass/compare/v$1...v{{version}}", exactly=1, prerelease=false},
 ]

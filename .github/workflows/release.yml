@@ -132,10 +132,18 @@ jobs:
         VERSION="${{ steps.get-version.outputs.version }}"
         # Extract the section for this version from CHANGELOG.md
         awk "BEGIN{p=0} /^## \[${VERSION}\]/{p=1; next} /^## \[/ && p{exit} p" CHANGELOG.md > /tmp/changelog.txt
-        # If empty, fall back to a default message
+
+        # If empty (pre-releases won't have a section), fall back to [Unreleased]
+        if [ ! -s /tmp/changelog.txt ]; then
+          echo "No section found for ${VERSION}, extracting [Unreleased] content..."
+          awk "BEGIN{p=0} /^## \[Unreleased\]/{p=1; next} /^## \[/ && p{exit} p" CHANGELOG.md > /tmp/changelog.txt
+        fi
+
+        # If still empty, use a default message
         if [ ! -s /tmp/changelog.txt ]; then
           echo "Release ${VERSION}" > /tmp/changelog.txt
         fi
+
         echo "changelog_file=/tmp/changelog.txt" >> $GITHUB_OUTPUT
 
     - name: Push changes

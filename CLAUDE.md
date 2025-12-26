@@ -229,11 +229,12 @@ If you need to create a release manually without cargo-release:
    - Setting `tag-prefix = "v"` creates tags like `vv0.3.1-rc.1` (double "vv")
    - Correct configuration: `tag-prefix = ""` produces tags like `v0.3.1-rc.1`
 
-2. **pre-release-replacements require prerelease = true:**
-   - By default, `pre-release-replacements` only run for standard releases
-   - For replacements to run during alpha/beta/rc releases, add `prerelease = true`
-   - Example: `{file="...", search="...", replace="...", prerelease=true}`
-   - Without this, CHANGELOG won't update during pre-releases
+2. **CHANGELOG updates only for final releases (prerelease = false):**
+   - This project uses `prerelease = false` to prevent CHANGELOG clutter from pre-releases
+   - **Pre-releases (alpha/beta/rc):** CHANGELOG.md stays unchanged, only Cargo.toml version updates
+   - **Final releases (release/minor/major):** CHANGELOG.md `[Unreleased]` becomes `[0.3.0]`
+   - **GitHub Releases for pre-releases:** Automatically use `[Unreleased]` content as changelog
+   - This keeps one clean changelog section that gets finalized when you do the official release
 
 3. **Pre-release levels work on the current version:**
    - `cargo release alpha` from `0.3.0` → `0.3.0-alpha.1` (NOT 0.3.1-alpha.1)
