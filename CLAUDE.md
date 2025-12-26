@@ -112,23 +112,19 @@ There are two ways to create a release:
 2. **Navigate to Actions → Create Release:**
    - Go to https://github.com/desolat/summon-keepass/actions/workflows/release.yml
    - Click "Run workflow"
-   - **For regular releases**, select version type:
-     - **patch**: 0.3.0 → 0.3.1 (bug fixes)
-     - **minor**: 0.3.0 → 0.4.0 (new features)
-     - **major**: 0.3.0 → 1.0.0 (breaking changes)
-     - **custom**: Specify exact version (e.g., 0.4.0)
-     - Leave pre_release empty
-   - **For pre-releases**, select pre-release type (version type is ignored):
-     - **rc**: 0.3.0 → 0.3.0-rc.1 (release candidate of current version)
-     - **alpha**: 0.3.0 → 0.3.0-alpha.1
-     - **beta**: 0.3.0-alpha.1 → 0.3.0-beta.1 (promotes from alpha to beta)
-     - **rc**: 0.3.0-beta.1 → 0.3.0-rc.1 (promotes from beta to rc)
-     - Subsequent runs increment: 0.3.0-rc.1 → 0.3.0-rc.2
+   - **Select release type from dropdown:**
+     - **release** - Finalize pre-release (0.3.0-rc.2 → 0.3.0) or patch bump (0.3.0 → 0.3.1)
+     - **minor** - New features (0.3.0 → 0.4.0)
+     - **major** - Breaking changes (0.3.0 → 1.0.0)
+     - **alpha** - Create alpha pre-release (0.3.0 → 0.3.0-alpha.1)
+     - **beta** - Create beta pre-release (0.3.0 → 0.3.0-beta.1 or 0.3.0-alpha.1 → 0.3.0-beta.1)
+     - **rc** - Create release candidate (0.3.0 → 0.3.0-rc.1 or 0.3.0-beta.1 → 0.3.0-rc.1)
+     - **custom** - Specify exact version in the custom_version field
    - Click "Run workflow"
 
 3. **The workflow will automatically:**
    - Run cargo-release with dry-run first (for validation)
-   - Update version in `Cargo.toml`, tests, and `CHANGELOG.md`
+   - Update version in `Cargo.toml` and `CHANGELOG.md`
    - Create commit: "chore: release X.Y.Z"
    - Create tag `vX.Y.Z`
    - Build the release binary
@@ -138,6 +134,19 @@ There are two ways to create a release:
    - Mark as pre-release if version contains `-alpha`, `-beta`, or `-rc`
 
 4. **Done!** The release is published at: https://github.com/desolat/summon-keepass/releases
+
+**Typical Pre-release to Stable Workflow:**
+```
+0.3.0 (current stable)
+  ↓ Select: "rc"
+0.3.0-rc.1 (test it)
+  ↓ Select: "rc" (increments to rc.2)
+0.3.0-rc.2 (more testing)
+  ↓ Select: "release" (finalizes)
+0.3.0 (final stable release)
+  ↓ Select: "minor"
+0.4.0 (next version)
+```
 
 #### Method 2: Local cargo-release
 
@@ -176,7 +185,6 @@ cargo install cargo-release
 
 3. **Review the dry-run output. cargo-release will:**
    - Update version in `Cargo.toml`
-   - Update version in `tests/integration_test.rs`
    - Update `CHANGELOG.md` (move Unreleased to versioned section with date)
    - Update changelog comparison links
    - Create a commit with message "chore: release X.Y.Z"
@@ -206,12 +214,11 @@ cargo install cargo-release
 If you need to create a release manually without cargo-release:
 
 1. Update version in `Cargo.toml`
-2. Update version expectations in `tests/integration_test.rs`
-3. Move unreleased changes in `CHANGELOG.md` to new version header
-4. Update changelog comparison links
-5. Commit: `git commit -m "chore: release X.Y.Z"`
-6. Tag: `git tag vX.Y.Z`
-7. Push: `git push && git push origin vX.Y.Z`
+2. Move unreleased changes in `CHANGELOG.md` to new version header
+3. Update changelog comparison links
+4. Commit: `git commit -m "chore: release X.Y.Z"`
+5. Tag: `git tag vX.Y.Z`
+6. Push: `git push && git push origin vX.Y.Z`
 
 ### cargo-release Configuration Notes
 
@@ -226,7 +233,7 @@ If you need to create a release manually without cargo-release:
    - By default, `pre-release-replacements` only run for standard releases
    - For replacements to run during alpha/beta/rc releases, add `prerelease = true`
    - Example: `{file="...", search="...", replace="...", prerelease=true}`
-   - Without this, CHANGELOG and test versions won't update during pre-releases
+   - Without this, CHANGELOG won't update during pre-releases
 
 3. **Pre-release levels work on the current version:**
    - `cargo release alpha` from `0.3.0` → `0.3.0-alpha.1` (NOT 0.3.1-alpha.1)
@@ -235,12 +242,18 @@ If you need to create a release manually without cargo-release:
    - Subsequent runs increment: `0.3.0-rc.1` → `0.3.0-rc.2`
    - To release a pre-release of a NEW version, first bump version in Cargo.toml manually, then run pre-release
 
+4. **Finalizing pre-releases uses patch (or "release"):**
+   - `cargo release patch` from `0.3.0-rc.2` → `0.3.0` (removes pre-release suffix)
+   - This is confusing because "patch" doesn't bump the patch version, it finalizes the current version
+   - The GitHub workflow includes a "release" option which is clearer (maps to patch internally)
+   - To bump to next version after pre-release, use minor/major: `0.3.0-rc.2` → `cargo release minor` → `0.4.0`
+
 ### cargo-release Configuration
 
 The release behavior is configured in `Cargo.toml` under `[package.metadata.release]`:
 - **No automatic push**: You must manually push after reviewing
 - **No crates.io publish**: This is a binary-only project
-- **Automatic file updates**: Version numbers updated in tests and CHANGELOG
+- **Automatic file updates**: CHANGELOG updated with version and date
 - **Consistent commit messages**: "chore: release X.Y.Z"
 
 ## Known Issues and Todo Items

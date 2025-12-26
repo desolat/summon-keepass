@@ -8,14 +8,38 @@ use common::*;
 fn test_version_flag_short() {
     let (stdout, stderr, exit_code) = run_summon_keepass(&["-V"]);
     assert_success(&stdout, &stderr, exit_code);
-    assert!(stdout.contains("0.3.1-rc.1"), "Version output should contain '0.3.0', got: {}", stdout);
+
+    // Validate semver format (MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH-PRERELEASE)
+    let version = stdout.trim();
+    assert!(!version.is_empty(), "Version output should not be empty");
+
+    // Check for basic semver pattern: starts with digit, contains dots
+    let parts: Vec<&str> = version.split('-').next().unwrap().split('.').collect();
+    assert_eq!(parts.len(), 3, "Version should have 3 parts (MAJOR.MINOR.PATCH), got: {}", version);
+
+    // Verify each part is a number
+    for part in parts {
+        assert!(part.parse::<u32>().is_ok(), "Version part '{}' should be a number in: {}", part, version);
+    }
 }
 
 #[test]
 fn test_version_flag_long() {
     let (stdout, stderr, exit_code) = run_summon_keepass(&["--version"]);
     assert_success(&stdout, &stderr, exit_code);
-    assert!(stdout.contains("0.3.1-rc.1"), "Version output should contain '0.3.0', got: {}", stdout);
+
+    // Validate semver format (MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH-PRERELEASE)
+    let version = stdout.trim();
+    assert!(!version.is_empty(), "Version output should not be empty");
+
+    // Check for basic semver pattern: starts with digit, contains dots
+    let parts: Vec<&str> = version.split('-').next().unwrap().split('.').collect();
+    assert_eq!(parts.len(), 3, "Version should have 3 parts (MAJOR.MINOR.PATCH), got: {}", version);
+
+    // Verify each part is a number
+    for part in parts {
+        assert!(part.parse::<u32>().is_ok(), "Version part '{}' should be a number in: {}", part, version);
+    }
 }
 
 // ===== Basic Retrieval Tests =====

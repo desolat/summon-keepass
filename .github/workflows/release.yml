@@ -3,28 +3,22 @@ name: Create Release
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Release type or specific version'
+      release_type:
+        description: 'What type of release to create'
         required: true
         type: choice
         options:
-          - patch
-          - minor
-          - major
-          - custom
+          - release (finalize pre-release or patch bump)
+          - minor (new features)
+          - major (breaking changes)
+          - alpha (pre-release)
+          - beta (pre-release)
+          - rc (pre-release)
+          - custom (specify exact version)
       custom_version:
-        description: 'Custom version (only if "custom" is selected)'
+        description: 'Custom version (only if "custom" is selected above)'
         required: false
         type: string
-      pre_release:
-        description: 'Pre-release type (if set, creates pre-release of current version: 0.3.0 → 0.3.0-rc.1)'
-        required: false
-        type: choice
-        options:
-          - ''
-          - alpha
-          - beta
-          - rc
 
 jobs:
   release:
@@ -55,29 +49,30 @@ jobs:
     - name: Determine release command
       id: release-cmd
       run: |
-        VERSION_TYPE="${{ github.event.inputs.version }}"
-        PRE_RELEASE="${{ github.event.inputs.pre_release }}"
+        RELEASE_TYPE="${{ github.event.inputs.release_type }}"
         CUSTOM_VERSION="${{ github.event.inputs.custom_version }}"
 
+        # Extract the first word from the selection (e.g., "release (finalize...)" -> "release")
+        RELEASE_CMD=$(echo "$RELEASE_TYPE" | awk '{print $1}')
+
         # Handle custom version
-        if [ "$VERSION_TYPE" = "custom" ]; then
+        if [ "$RELEASE_CMD" = "custom" ]; then
           if [ -z "$CUSTOM_VERSION" ]; then
             echo "Error: Custom version is required when 'custom' is selected"
             exit 1
           fi
           RELEASE_CMD="$CUSTOM_VERSION"
           echo "📦 Creating custom version: $CUSTOM_VERSION"
-        # Handle pre-release - create pre-release of CURRENT version
-        elif [ -n "$PRE_RELEASE" ]; then
-          # Pre-release levels (alpha, beta, rc) work on the current version
-          # 0.3.0 -> 0.3.0-rc.1
-          # 0.3.0-rc.1 -> 0.3.0-rc.2
-          RELEASE_CMD="$PRE_RELEASE"
-          echo "📦 Creating pre-release: $PRE_RELEASE of current version"
-        # Handle regular version bump without pre-release
+        # Handle pre-release levels (alpha, beta, rc)
+        elif [[ "$RELEASE_CMD" =~ ^(alpha|beta|rc)$ ]]; then
+          echo "📦 Creating pre-release: $RELEASE_CMD of current version"
+        # Handle regular version bumps (release, minor, major)
         else
-          RELEASE_CMD="$VERSION_TYPE"
-          echo "📦 Creating release: ${VERSION_TYPE} bump"
+          # Map "release" to "patch" for cargo-release
+          if [ "$RELEASE_CMD" = "release" ]; then
+            RELEASE_CMD="patch"
+          fi
+          echo "📦 Creating release: $RELEASE_CMD bump"
         fi
 
         echo "command=$RELEASE_CMD" >> $GITHUB_OUTPUT

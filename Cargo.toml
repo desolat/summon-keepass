@@ -29,8 +29,6 @@ tag-message = "Release {{version}}"
 publish = false
 # Pre-release replacements in files
 pre-release-replacements = [
-  # Update version in integration tests
-  {file="tests/integration_test.rs", search="contains\\(\"[0-9.]+\"\\)", replace="contains(\"{{version}}\")", exactly=2, prerelease=true},
   # Update CHANGELOG.md - replace Unreleased header with version and date
   {file="CHANGELOG.md", search="## \\[Unreleased\\]", replace="## [Unreleased]\n\n## [{{version}}] - {{date}}", exactly=1, prerelease=true},
   # Update comparison links in CHANGELOG.md
