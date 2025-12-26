@@ -81,7 +81,7 @@ jobs:
     - name: Dry-run release
       run: |
         echo "🔍 Running dry-run first..."
-        cargo release ${{ steps.release-cmd.outputs.command }} --dry-run --no-confirm
+        cargo release ${{ steps.release-cmd.outputs.command }} --no-confirm
 
     - name: Execute release
       run: |
