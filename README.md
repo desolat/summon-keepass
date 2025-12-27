@@ -10,11 +10,37 @@ Download the archive for your OS from the [latest release](../../releases), extr
 
 Alternatively there is an [install script](./install.sh) available.
 
-Create a `.summon-keepass.ini` file in your `$HOME` directory with the following content:
+Configuration
+-------------
+
+`summon-keepass` supports two configuration methods:
+
+### Option 1: Environment Variables (Recommended for projects)
+
+Set the following environment variables:
+
+```bash
+export SUMMON_KEEPASS_DB_PATH=/path/to/your/keepass_database_file.kdbx
+export SUMMON_KEEPASS_DB_PASS="password to your keepass database"
+```
+
+This method is ideal for:
+- Project-specific configuration (via `.env` files, docker-compose, etc.)
+- CI/CD environments
+- Containerized deployments
+- Different databases per project/environment
+
+### Option 2: Configuration File
+
+Create a `.summon-keepass.ini` file in your `$HOME` directory:
 
     [keepass_db]
     path=/path/to/your/keepass_database_file.kdbx
     pass=password to your keepass database
+
+### Configuration Priority
+
+If both methods are configured, environment variables take precedence over the configuration file. You can also mix sources (e.g., path from environment, password from config file).
 
 Usage
 -----
@@ -73,6 +99,6 @@ See [CLAUDE.md](CLAUDE.md#release-process) for detailed instructions.
 
 Todo
 ----
-- get the KeePass DB password from an environment variable (preferred)
+- ~~get the KeePass DB password from an environment variable~~ ✓ Completed (supports both path and password via environment variables)
 - key file authentication
-- error handling for incorrect config/KeePass DB file path
+- ~~error handling for incorrect config/KeePass DB file path~~ ✓ Improved (graceful error messages showing all checked configuration sources)

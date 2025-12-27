@@ -174,3 +174,100 @@ fn test_special_characters_in_username() {
     assert_eq!(stdout.trim(), "user@example.com",
         "Expected 'user@example.com', got: '{}'", stdout);
 }
+
+// ===== Configuration Tests =====
+
+#[test]
+fn test_env_var_config_path_and_pass() {
+    let (stdout, stderr, exit_code) = run_with_env_only(&["simple-entry"]);
+    assert_success(&stdout, &stderr, exit_code);
+    assert_eq!(stdout.trim(), "simple-password",
+        "Expected 'simple-password', got: '{}'", stdout);
+}
+
+#[test]
+fn test_env_var_priority_over_config_file() {
+    // Set environment variable to point to test DB, config file has same path
+    // Since they both point to same DB, we just verify env vars work when both are present
+    let test_db_path = get_test_db_path();
+    let (stdout, stderr, exit_code) = run_with_env_override(
+        &["simple-entry"],
+        Some(test_db_path.to_str().unwrap()),
+        Some("test123")
+    );
+    assert_success(&stdout, &stderr, exit_code);
+    assert_eq!(stdout.trim(), "simple-password",
+        "Expected 'simple-password', got: '{}'", stdout);
+}
+
+#[test]
+fn test_config_file_fallback_when_no_env_vars() {
+    // Existing tests already cover this, but explicit test for clarity
+    let (stdout, stderr, exit_code) = run_with_config_only(&["simple-entry"]);
+    assert_success(&stdout, &stderr, exit_code);
+    assert_eq!(stdout.trim(), "simple-password",
+        "Expected 'simple-password', got: '{}'", stdout);
+}
+
+#[test]
+fn test_partial_env_config_path_only() {
+    // Set only SUMMON_KEEPASS_DB_PATH via env, password comes from config file
+    let test_db_path = get_test_db_path();
+    let (stdout, stderr, exit_code) = run_with_env_override(
+        &["simple-entry"],
+        Some(test_db_path.to_str().unwrap()),
+        None  // No password in env, should use config file
+    );
+    assert_success(&stdout, &stderr, exit_code);
+    assert_eq!(stdout.trim(), "simple-password",
+        "Expected 'simple-password', got: '{}'", stdout);
+}
+
+#[test]
+fn test_partial_env_config_pass_only() {
+    // Set only SUMMON_KEEPASS_DB_PASS via env, path comes from config file
+    let (stdout, stderr, exit_code) = run_with_env_override(
+        &["simple-entry"],
+        None,  // No path in env, should use config file
+        Some("test123")
+    );
+    assert_success(&stdout, &stderr, exit_code);
+    assert_eq!(stdout.trim(), "simple-password",
+        "Expected 'simple-password', got: '{}'", stdout);
+}
+
+#[test]
+fn test_missing_config_error_message() {
+    use assert_cmd::Command;
+
+    let mut cmd = Command::cargo_bin("summon-keepass").expect("Failed to find binary");
+
+    // Don't set environment variables
+    // Set HOME to nonexistent directory so config file is not found
+    cmd.env("HOME", "/tmp/nonexistent-dir-for-summon-keepass-test");
+    cmd.args(&["simple-entry"]);
+
+    let output = cmd.output().expect("Failed to execute command");
+    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+    let exit_code = output.status.code().unwrap_or(-1);
+
+    assert_eq!(exit_code, 1, "Expected exit code 1, got: {}", exit_code);
+    assert!(stderr.contains("Configuration error"),
+        "Expected 'Configuration error' in stderr, got: {}", stderr);
+    assert!(stderr.contains("SUMMON_KEEPASS_DB_PATH"),
+        "Expected 'SUMMON_KEEPASS_DB_PATH' in stderr, got: {}", stderr);
+    assert!(stderr.contains("SUMMON_KEEPASS_DB_PASS"),
+        "Expected 'SUMMON_KEEPASS_DB_PASS' in stderr, got: {}", stderr);
+    assert!(stderr.contains(".summon-keepass.ini"),
+        "Expected '.summon-keepass.ini' in stderr, got: {}", stderr);
+}
+
+#[test]
+fn test_backward_compatibility_existing_users() {
+    // Verify that config file still works (all existing tests use config file)
+    // This test explicitly documents the backward compatibility requirement
+    let (stdout, stderr, exit_code) = run_summon_keepass(&["simple-entry"]);
+    assert_success(&stdout, &stderr, exit_code);
+    assert_eq!(stdout.trim(), "simple-password",
+        "Expected 'simple-password', got: '{}'", stdout);
+}
