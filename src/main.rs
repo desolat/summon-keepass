@@ -12,6 +12,10 @@ use std::fs::File;
 use std::process;
 use std::io::{self, Write};
 
+struct KeePassConfig {
+    db_path: String,
+    db_pass: String,
+}
 
 fn main() -> std::io::Result<()> {
     let stdout = io::stdout();
@@ -37,12 +41,17 @@ fn main() -> std::io::Result<()> {
         process::exit(1);
     }
 
-    let config_path = format!("{}/.summon-keepass.ini", env::var("HOME").unwrap());
+    let config = match load_config() {
+        Ok(cfg) => cfg,
+        Err(error_msg) => {
+            err_handle.write(error_msg.as_bytes()).unwrap();
+            err_handle.flush().unwrap();
+            process::exit(1);
+        }
+    };
 
-    let config = Ini::load_from_file(config_path.as_str()).unwrap();
-    let keepass_db = config.section(Some("keepass_db".to_owned())).unwrap();
-    let keepass_db_path = keepass_db.get("path").unwrap();
-    let keepass_db_pass = keepass_db.get("pass").unwrap();
+    let keepass_db_path = &config.db_path;
+    let keepass_db_pass = &config.db_pass;
 
     let db_path = std::path::Path::new(keepass_db_path);
     let key = DatabaseKey::new().with_password(keepass_db_pass);
@@ -82,4 +91,93 @@ fn main() -> std::io::Result<()> {
     err_handle.write(format!("{} could not be retrieved", secret_path).as_bytes()).unwrap();
     err_handle.flush().unwrap();
     process::exit(1);
+}
+
+/// Load configuration from environment variables and/or INI file
+/// Priority: Environment variables > ~/.summon-keepass.ini
+fn load_config() -> Result<KeePassConfig, String> {
+    // Try environment variables first
+    let env_path = env::var("SUMMON_KEEPASS_DB_PATH").ok();
+    let env_pass = env::var("SUMMON_KEEPASS_DB_PASS").ok();
+
+    // Try INI file as fallback
+    let (ini_path, ini_pass) = load_ini_config();
+
+    // Merge with priority (env vars override INI)
+    let db_path = env_path.clone().or(ini_path.clone());
+    let db_pass = env_pass.clone().or(ini_pass.clone());
+
+    // Validate both are present
+    match (db_path, db_pass) {
+        (Some(path), Some(pass)) => Ok(KeePassConfig {
+            db_path: path,
+            db_pass: pass,
+        }),
+        _ => Err(build_config_error(&env_path, &env_pass, &ini_path, &ini_pass)),
+    }
+}
+
+/// Load configuration from ~/.summon-keepass.ini file
+/// Returns (Option<path>, Option<password>)
+fn load_ini_config() -> (Option<String>, Option<String>) {
+    // Get HOME directory (return None if not available)
+    let home = match env::var("HOME") {
+        Ok(h) => h,
+        Err(_) => return (None, None),
+    };
+
+    let config_path = format!("{}/.summon-keepass.ini", home);
+
+    // Try to load INI file (return None if fails)
+    let config = match Ini::load_from_file(&config_path) {
+        Ok(c) => c,
+        Err(_) => return (None, None),
+    };
+
+    // Try to get section and values
+    let section = config.section(Some("keepass_db"));
+    match section {
+        Some(s) => (
+            s.get("path").map(|p| p.to_string()),
+            s.get("pass").map(|p| p.to_string()),
+        ),
+        None => (None, None),
+    }
+}
+
+/// Build a helpful error message showing what configuration sources were checked
+fn build_config_error(
+    env_path: &Option<String>,
+    env_pass: &Option<String>,
+    ini_path: &Option<String>,
+    ini_pass: &Option<String>,
+) -> String {
+    let mut msg = String::from("Configuration error: Could not load KeePass database configuration.\n\n");
+
+    msg.push_str("Checked sources:\n");
+
+    // Environment variables
+    msg.push_str("  Environment variables:\n");
+    msg.push_str(&format!("    SUMMON_KEEPASS_DB_PATH: {}\n",
+        if env_path.is_some() { "✓ Found" } else { "✗ Not set" }));
+    msg.push_str(&format!("    SUMMON_KEEPASS_DB_PASS: {}\n",
+        if env_pass.is_some() { "✓ Found" } else { "✗ Not set" }));
+
+    // INI file
+    msg.push_str("  Configuration file (~/.summon-keepass.ini):\n");
+    if ini_path.is_some() || ini_pass.is_some() {
+        msg.push_str(&format!("    path: {}\n",
+            if ini_path.is_some() { "✓ Found" } else { "✗ Missing" }));
+        msg.push_str(&format!("    pass: {}\n",
+            if ini_pass.is_some() { "✓ Found" } else { "✗ Missing" }));
+    } else {
+        msg.push_str("    ✗ File not found or invalid format\n");
+    }
+
+    msg.push_str("\nRequired: Both database path and password must be configured.\n");
+    msg.push_str("Set either:\n");
+    msg.push_str("  - Environment variables: SUMMON_KEEPASS_DB_PATH and SUMMON_KEEPASS_DB_PASS\n");
+    msg.push_str("  - Or create ~/.summon-keepass.ini with [keepass_db] section\n");
+
+    msg
 }

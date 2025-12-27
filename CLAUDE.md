@@ -47,7 +47,7 @@ strip target/release/summon-keepass
 
 **IMPORTANT: Always run tests for ANY code changes!**
 
-This project has comprehensive integration tests (17 test cases) that validate all functionality. Tests MUST be run in Docker to ensure consistent environment and prevent HOME directory conflicts.
+This project has comprehensive integration tests (24 test cases) that validate all functionality. Tests MUST be run in Docker to ensure consistent environment and prevent HOME directory conflicts.
 
 **Run tests containerized (REQUIRED):**
 ```bash
@@ -73,6 +73,7 @@ docker run --rm -it summon-keepass:test /bin/bash
 - Line ending conversion (1 test)
 - Error handling tests (3 tests)
 - Special characters tests (2 tests)
+- Configuration tests (7 tests) - environment variables, config file fallback, mixed sources, error messages
 
 **Test Database:** `tests/fixtures/test-database.kdbx` (password: `test123`)
 
@@ -88,20 +89,49 @@ docker run --rm -it summon-keepass:test /bin/bash
 ## Architecture
 
 ### Single-File Application
-The entire application logic is contained in `src/main.rs` (~83 lines). This is a straightforward CLI tool with no modular architecture.
+The entire application logic is contained in `src/main.rs` (~182 lines). This is a straightforward CLI tool with no modular architecture.
+
+### Configuration
+
+**Configuration Sources (Priority Order):**
+1. **Environment Variables** (highest priority):
+   - `SUMMON_KEEPASS_DB_PATH` - Path to KeePass database file
+   - `SUMMON_KEEPASS_DB_PASS` - Password for KeePass database
+
+2. **Legacy INI File** (fallback):
+   - `~/.summon-keepass.ini` with `[keepass_db]` section format
+
+3. **Mixed Configuration Support**:
+   - Allows partial configuration from different sources
+   - Example: path from environment variable, password from config file
+
+**Implementation:**
+- `load_config()` function implements the priority order and merging logic
+- `load_ini_config()` gracefully handles missing HOME, missing file, or invalid format
+- `build_config_error()` generates helpful error messages showing all checked sources
+- No panics on configuration errors - graceful exit with code 1 and descriptive messages
 
 ### Core Flow (src/main.rs)
-1. **Version Flag Handling** (lines 24-31): Supports `-V` and `--version` flags
-2. **Argument Validation** (lines 33-37): Ensures a secret path argument was provided
-3. **Configuration Loading** (lines 39-45): Reads `~/.summon-keepass.ini` for KeePass database path and password
-4. **Database Access** (lines 47-50): Opens the KeePass database using the `keepass` crate with `DatabaseKey` API
-5. **Secret Path Parsing** (lines 52-65): Parses the secret path format `[group/subgroup/]entry[|field]`
+1. **Version Flag Handling** (lines 28-35): Supports `-V` and `--version` flags
+2. **Argument Validation** (lines 38-42): Ensures a secret path argument was provided
+3. **Configuration Loading** (lines 44-51): Calls `load_config()` which:
+   - Tries environment variables (`SUMMON_KEEPASS_DB_PATH`, `SUMMON_KEEPASS_DB_PASS`)
+   - Falls back to `~/.summon-keepass.ini`
+   - Supports mixing sources (e.g., path from env, password from file)
+   - Returns helpful error messages if configuration is missing/invalid
+4. **Database Access** (lines 56-59): Opens the KeePass database using the `keepass` crate with `DatabaseKey` API
+5. **Secret Path Parsing** (lines 61-74): Parses the secret path format `[group/subgroup/]entry[|field]`
    - Default field is "Password" if not specified
    - Uses `|` as field separator
    - Validates path format (exits with code 2 for invalid paths)
-6. **Entry Retrieval** (lines 66-77): Navigates the KeePass database tree structure using `/` separators
+6. **Entry Retrieval** (lines 75-88): Navigates the KeePass database tree structure using `/` separators
    - Gracefully handles missing entries and fields (exits with code 1)
-7. **Output** (line 69): Writes the field value to stdout with DOS/Windows line endings converted to Unix (using `dos2unix`)
+7. **Output**: Writes the field value to stdout with DOS/Windows line endings converted to Unix (using `dos2unix`)
+
+**Helper Functions (lines 96-181):**
+- `load_config()` - Main configuration loader with priority order
+- `load_ini_config()` - Graceful INI file loading (no panics)
+- `build_config_error()` - Generates comprehensive error messages
 
 ### Dependencies (Cargo.toml)
 **Runtime Dependencies:**
@@ -348,23 +378,30 @@ When updating dependencies:
 ## Known Issues and Todo Items
 
 **Completed:**
-- ✅ Tests (comprehensive 17-test suite with Docker integration)
+- ✅ Tests (comprehensive 24-test suite with Docker integration)
 - ✅ Version flag support
 - ✅ CI/CD pipeline with automated releases
 - ✅ cargo-release integration
 - ✅ Error handling improvements (graceful exit codes)
+- ✅ Environment variable configuration (SUMMON_KEEPASS_DB_PATH, SUMMON_KEEPASS_DB_PASS)
+- ✅ Improved error handling with helpful messages showing all checked configuration sources
 
 **Outstanding (from README.md):**
-- KeePass DB password should be read from environment variable (preferred over config file)
 - Key file authentication not yet supported
-- Error handling for incorrect config/KeePass DB file paths needs improvement
 
 ## Recent Updates (v0.4.0)
+
+**New Features:**
+- **Environment Variable Configuration:** Added support for `SUMMON_KEEPASS_DB_PATH` and `SUMMON_KEEPASS_DB_PASS` environment variables
+- **Configuration Priority:** Environment variables override `~/.summon-keepass.ini` config file
+- **Mixed Configuration Sources:** Support for partial configuration from different sources (e.g., path from env, password from file)
+- **Improved Error Handling:** No more panics on missing configuration; graceful error messages showing all checked sources
 
 **Dependency Updates:**
 - Updated `keepass` from 0.4.9 → 0.8.16 (major version, API changes required)
 - Updated `rust-ini` from 0.9.4 → 0.21.3 (major version)
 - Updated `newline-converter` from 0.2.0 → 0.3.0 (minor version)
+- Updated Rust edition from 2021 → 2024
 
 **API Changes Required:**
 - Changed `keepass::NodeRef` import to `keepass::db::NodeRef` (module reorganization)
@@ -379,6 +416,7 @@ When updating dependencies:
   ```
 
 **Testing:**
-- All 17 integration tests pass with updated dependencies
+- All 24 integration tests pass (17 original + 7 new configuration tests)
 - No functional regressions
 - Version validation tests use semver format checking (no hardcoded versions)
+- New tests cover environment variables, config file fallback, mixed sources, and error handling

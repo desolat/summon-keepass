@@ -7,9 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Environment variable configuration support (`SUMMON_KEEPASS_DB_PATH` and `SUMMON_KEEPASS_DB_PASS`)
+- Configuration precedence: environment variables override `~/.summon-keepass.ini`
+- Support for mixed configuration sources (e.g., path from env var, password from config file)
+- Comprehensive error messages showing all checked configuration sources and helpful setup instructions
+
 ### Changed
 - Updated to Rust 2024 edition using cargo migration tooling
 - Updated Dockerfile.test to use Rust 1.85 for compatibility with latest dependencies
+- Configuration loading now tries environment variables before falling back to INI file
+
+### Fixed
+- No longer panics when HOME environment variable is not set
+- Graceful handling of missing or invalid configuration files with descriptive error messages
 
 ## [0.3.0] - 2025-12-26
 
