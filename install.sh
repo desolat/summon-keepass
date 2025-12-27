@@ -72,9 +72,9 @@ check_version() {
   local RELEASE_URL="https://api.github.com/repos/$REPO_NAME/releases/tags/$VERSION"
 
   if [[ $(command -v wget) ]]; then
-    wget -q "$RELEASE_URL"
+    wget -q -O /dev/null "$RELEASE_URL"
   elif [[ $(command -v curl) ]]; then
-    curl --fail -sSL "$RELEASE_URL"
+    curl --fail -sSL "$RELEASE_URL" >/dev/null
   else
     error "Could not find wget or curl"
   fi
