@@ -25,11 +25,16 @@ fn main() -> std::io::Result<()> {
 
     let args: Vec<_> = env::args_os().collect();
 
-    // Handle version flag
+    // Handle flags
     if args.len() > 1 {
         let arg = args[1].to_str().unwrap();
         if arg == "-V" || arg == "--version" {
             out_handle.write(format!("{}\n", env!("CARGO_PKG_VERSION")).as_bytes()).unwrap();
+            out_handle.flush().unwrap();
+            process::exit(0);
+        }
+        if arg == "-h" || arg == "--help" {
+            out_handle.write(get_help_text().as_bytes()).unwrap();
             out_handle.flush().unwrap();
             process::exit(0);
         }
@@ -91,6 +96,66 @@ fn main() -> std::io::Result<()> {
     err_handle.write(format!("{} could not be retrieved", secret_path).as_bytes()).unwrap();
     err_handle.flush().unwrap();
     process::exit(1);
+}
+
+/// Generate help text explaining configuration and usage
+fn get_help_text() -> String {
+    format!(r#"summon-keepass {}
+
+Summon provider for reading secrets from KeePass (.kdbx) database files.
+
+USAGE:
+    summon-keepass [OPTIONS] <SECRET_PATH>
+    summon-keepass -h|--help
+    summon-keepass -V|--version
+
+OPTIONS:
+    -h, --help       Display this help message
+    -V, --version    Display version information
+
+SECRET PATH FORMAT:
+    [group/subgroup/]entry[|field]
+
+    By default, the 'Password' field is returned. To retrieve a different
+    field, append |field_name to the entry path.
+
+EXAMPLES:
+    summon-keepass "simple-entry"
+        Returns the Password field from 'simple-entry'
+
+    summon-keepass "aws/iam/user/robot"
+        Returns the Password field from nested entry
+
+    summon-keepass "account|UserName"
+        Returns the UserName field from 'account'
+
+    summon-keepass "aws/iam/user/robot|access_key_id"
+        Returns the access_key_id field from nested entry
+
+CONFIGURATION:
+
+    Option 1: Environment Variables (Recommended for projects)
+        export SUMMON_KEEPASS_DB_PATH=/path/to/database.kdbx
+        export SUMMON_KEEPASS_DB_PASS="your database password"
+
+    Option 2: Configuration File
+        Create ~/.summon-keepass.ini with:
+
+        [keepass_db]
+        path=/path/to/database.kdbx
+        pass=your database password
+
+    Priority: Environment variables override configuration file.
+    You can also mix sources (e.g., path from env, password from file).
+
+EXIT CODES:
+    0    Success
+    1    Configuration error, entry not found, or field not found
+    2    Invalid secret path format
+
+For more information, visit:
+    https://github.com/desolat/summon-keepass
+"#, env!("CARGO_PKG_VERSION"))
 }
 
 /// Load configuration from environment variables and/or INI file
