@@ -6,7 +6,7 @@ Simple [summon](https://cyberark.github.io/summon/) provider that allows usage o
 Installation
 -----
 
-Download the archive for your OS from the [latest release](../../releases), extract it and provide the executable to summon [as a provider](https://cyberark.github.io/summon/#providers). 
+Download the archive for your OS from the [latest release](../../releases), extract it and provide the executable to summon [as a provider](https://cyberark.github.io/summon/#providers).
 
 Alternatively there is an [install script](./install.sh) available.
 
@@ -20,7 +20,7 @@ Usage
 -----
 
 `summon-keepass` uses the following syntax for secrets:
-  
+
     [group/subgroup/]entry[|field]
 
 By default the `Password` field value of the `entry` will be returned. If an alternative `field` name is being provided, the value of that field will be returned.

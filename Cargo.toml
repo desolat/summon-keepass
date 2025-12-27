@@ -1,13 +1,13 @@
 [package]
 name = "summon-keepass"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 authors = ["Marcin Skarbek <git@skarbek.name>", "Christoph Jähnigen <desolat@nuabaranda.net>"]
 
 [dependencies]
-keepass = "0.4.9"
-rust-ini = "0.9.4"
-newline-converter = "0.2.0"
+keepass = "0.8.16"
+rust-ini = "0.21.3"
+newline-converter = "0.3.0"
 
 [dev-dependencies]
 assert_cmd = "2.0"
