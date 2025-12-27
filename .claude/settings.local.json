@@ -21,7 +21,8 @@
       "Bash(cargo search:*)",
       "Bash(cargo build:*)",
       "Bash(export HOME=/mnt/d/projects/summon-keepass/tests/fixtures:*)",
-      "Bash(cargo test:*)"
+      "Bash(cargo test:*)",
+      "Bash(cargo fix:*)"
     ]
   }
 }
