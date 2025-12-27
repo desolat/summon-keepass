@@ -22,7 +22,10 @@
       "Bash(cargo build:*)",
       "Bash(export HOME=/mnt/d/projects/summon-keepass/tests/fixtures:*)",
       "Bash(cargo test:*)",
-      "Bash(cargo fix:*)"
+      "Bash(cargo fix:*)",
+      "Bash(find:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
