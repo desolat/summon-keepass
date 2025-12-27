@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Updated to Rust 2024 edition using cargo migration tooling
 - Updated Dockerfile.test to use Rust 1.85 for compatibility with latest dependencies
 
 ## [0.3.0] - 2025-12-26

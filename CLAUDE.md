@@ -26,7 +26,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Current Version:** 0.4.0
 **Status:** Production-ready with comprehensive test coverage
-**Rust Edition:** 2021
+**Rust Edition:** 2024
 
 ## Build and Development Commands
 
