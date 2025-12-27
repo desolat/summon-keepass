@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    docker run --rm summon-keepass:test
    ```
 
-2. **ALWAYS run tests after ANY code change** - All 17 tests must pass
+2. **ALWAYS run tests after ANY code change** - All 26 tests must pass
 
 3. **ALWAYS read code before modifying** - Never propose changes without understanding existing implementation
 

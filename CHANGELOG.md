@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration precedence: environment variables override `~/.summon-keepass.ini`
 - Support for mixed configuration sources (e.g., path from env var, password from config file)
 - Comprehensive error messages showing all checked configuration sources and helpful setup instructions
+- Help flag (`-h` / `--help`) with detailed usage, configuration options, examples, and exit codes
 
 ### Changed
 - Updated to Rust 2024 edition using cargo migration tooling

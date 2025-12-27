@@ -2,6 +2,36 @@ mod common;
 
 use common::*;
 
+// ===== Help Flag Tests =====
+
+#[test]
+fn test_help_flag_short() {
+    let (stdout, stderr, exit_code) = run_summon_keepass(&["-h"]);
+    assert_success(&stdout, &stderr, exit_code);
+
+    // Verify help text contains key sections
+    assert!(stdout.contains("summon-keepass"), "Help should contain program name");
+    assert!(stdout.contains("USAGE:"), "Help should contain USAGE section");
+    assert!(stdout.contains("OPTIONS:"), "Help should contain OPTIONS section");
+    assert!(stdout.contains("SECRET PATH FORMAT:"), "Help should contain SECRET PATH FORMAT section");
+    assert!(stdout.contains("EXAMPLES:"), "Help should contain EXAMPLES section");
+    assert!(stdout.contains("CONFIGURATION:"), "Help should contain CONFIGURATION section");
+    assert!(stdout.contains("EXIT CODES:"), "Help should contain EXIT CODES section");
+    assert!(stdout.contains("SUMMON_KEEPASS_DB_PATH"), "Help should mention environment variables");
+    assert!(stdout.contains("~/.summon-keepass.ini"), "Help should mention config file");
+}
+
+#[test]
+fn test_help_flag_long() {
+    let (stdout, stderr, exit_code) = run_summon_keepass(&["--help"]);
+    assert_success(&stdout, &stderr, exit_code);
+
+    // Verify help text contains key sections
+    assert!(stdout.contains("summon-keepass"), "Help should contain program name");
+    assert!(stdout.contains("USAGE:"), "Help should contain USAGE section");
+    assert!(stdout.contains("CONFIGURATION:"), "Help should contain CONFIGURATION section");
+}
+
 // ===== Version Flag Tests =====
 
 #[test]
