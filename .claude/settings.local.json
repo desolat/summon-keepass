@@ -25,7 +25,8 @@
       "Bash(cargo fix:*)",
       "Bash(find:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git pull:*)"
     ]
   }
 }
