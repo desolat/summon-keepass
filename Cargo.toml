@@ -1,6 +1,6 @@
 [package]
 name = "summon-keepass"
-version = "0.4.0"
+version = "0.4.1-rc.1"
 edition = "2024"
 authors = ["Marcin Skarbek <git@skarbek.name>", "Christoph Jähnigen <desolat@nuabaranda.net>"]
 
