@@ -3,7 +3,8 @@ extern crate keepass;
 extern crate newline_converter;
 
 use ini::Ini;
-use keepass::{Database, NodeRef, Result};
+use keepass::{Database, DatabaseKey};
+use keepass::db::NodeRef;
 use newline_converter::dos2unix;
 
 use std::env;
@@ -12,7 +13,7 @@ use std::process;
 use std::io::{self, Write};
 
 
-fn main() -> Result<()> {
+fn main() -> std::io::Result<()> {
     let stdout = io::stdout();
     let mut out_handle = stdout.lock();
     let stderr = io::stderr();
@@ -44,7 +45,9 @@ fn main() -> Result<()> {
     let keepass_db_pass = keepass_db.get("pass").unwrap();
 
     let db_path = std::path::Path::new(keepass_db_path);
-    let db = Database::open(&mut File::open(db_path)?, Some(keepass_db_pass), None)?;
+    let key = DatabaseKey::new().with_password(keepass_db_pass);
+    let db = Database::open(&mut File::open(db_path)?, key)
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
     
     let secret_path = args[1].to_str().unwrap();
     let secret_vec = secret_path.split("|").collect::<Vec<&str>>();
