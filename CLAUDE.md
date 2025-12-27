@@ -2,9 +2,31 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Critical Rules
+
+**⚠️ ALWAYS follow these rules when working on this codebase:**
+
+1. **ALWAYS run tests containerized** - Use Docker, never bare `cargo test`
+   ```bash
+   docker build -f Dockerfile.test -t summon-keepass:test .
+   docker run --rm summon-keepass:test
+   ```
+
+2. **ALWAYS run tests after ANY code change** - All 17 tests must pass
+
+3. **ALWAYS read code before modifying** - Never propose changes without understanding existing implementation
+
+4. **ALWAYS update CHANGELOG.md** - Add changes to `[Unreleased]` section
+
+5. **NEVER skip tests** - No exceptions for "small" changes
+
 ## Project Overview
 
 `summon-keepass` is a Rust-based provider for [summon](https://cyberark.github.io/summon/) that enables reading secrets from KeePass (.kdbx) database files. It's a single-binary CLI tool that integrates with summon's secrets management workflow.
+
+**Current Version:** 0.4.0
+**Status:** Production-ready with comprehensive test coverage
+**Rust Edition:** 2021
 
 ## Build and Development Commands
 
@@ -22,7 +44,37 @@ strip target/release/summon-keepass
 ```
 
 ### Testing
-Tests are currently minimal (see Todo in README). The tests directory exists but is empty.
+
+**IMPORTANT: Always run tests for ANY code changes!**
+
+This project has comprehensive integration tests (17 test cases) that validate all functionality. Tests MUST be run in Docker to ensure consistent environment and prevent HOME directory conflicts.
+
+**Run tests containerized (REQUIRED):**
+```bash
+# Build test image
+docker build -f Dockerfile.test -t summon-keepass:test .
+
+# Run all tests
+docker run --rm summon-keepass:test
+
+# Run specific test
+docker run --rm summon-keepass:test cargo test test_version_flag_short
+
+# Shell access for debugging
+docker run --rm -it summon-keepass:test /bin/bash
+```
+
+**DO NOT run tests with bare `cargo test`** - this can cause issues with HOME directory paths and test database access. Always use the Docker container.
+
+**Test Coverage:**
+- Version flag tests (2 tests)
+- Basic retrieval tests (4 tests)
+- Field access tests (5 tests)
+- Line ending conversion (1 test)
+- Error handling tests (3 tests)
+- Special characters tests (2 tests)
+
+**Test Database:** `tests/fixtures/test-database.kdbx` (password: `test123`)
 
 ### Running
 ```bash
@@ -36,21 +88,31 @@ Tests are currently minimal (see Todo in README). The tests directory exists but
 ## Architecture
 
 ### Single-File Application
-The entire application logic is contained in `src/main.rs` (~65 lines). This is a straightforward CLI tool with no modular architecture.
+The entire application logic is contained in `src/main.rs` (~83 lines). This is a straightforward CLI tool with no modular architecture.
 
 ### Core Flow (src/main.rs)
-1. **Configuration Loading** (lines 28-33): Reads `~/.summon-keepass.ini` for KeePass database path and password
-2. **Database Access** (lines 35-36): Opens the KeePass database using the `keepass` crate
-3. **Secret Path Parsing** (lines 38-53): Parses the secret path format `[group/subgroup/]entry[|field]`
+1. **Version Flag Handling** (lines 24-31): Supports `-V` and `--version` flags
+2. **Argument Validation** (lines 33-37): Ensures a secret path argument was provided
+3. **Configuration Loading** (lines 39-45): Reads `~/.summon-keepass.ini` for KeePass database path and password
+4. **Database Access** (lines 47-50): Opens the KeePass database using the `keepass` crate with `DatabaseKey` API
+5. **Secret Path Parsing** (lines 52-65): Parses the secret path format `[group/subgroup/]entry[|field]`
    - Default field is "Password" if not specified
    - Uses `|` as field separator
-4. **Entry Retrieval** (lines 54-59): Navigates the KeePass database tree structure using `/` separators
-5. **Output** (line 56): Writes the field value to stdout with DOS/Windows line endings converted to Unix (using `dos2unix`)
+   - Validates path format (exits with code 2 for invalid paths)
+6. **Entry Retrieval** (lines 66-77): Navigates the KeePass database tree structure using `/` separators
+   - Gracefully handles missing entries and fields (exits with code 1)
+7. **Output** (line 69): Writes the field value to stdout with DOS/Windows line endings converted to Unix (using `dos2unix`)
 
 ### Dependencies (Cargo.toml)
-- `keepass` (0.4.9): KeePass database parsing
-- `rust-ini` (0.9.4): Configuration file parsing
-- `newline-converter` (0.2.0): DOS to Unix line ending conversion (addresses line ending issues from keepass library)
+**Runtime Dependencies:**
+- `keepass` (0.8.16): KeePass database parsing (KDBX3/KDBX4 support)
+- `rust-ini` (0.21.3): Configuration file parsing
+- `newline-converter` (0.3.0): DOS to Unix line ending conversion
+
+**Dev Dependencies:**
+- `assert_cmd` (2.0): Command-line testing
+- `predicates` (3.0): Test assertions
+- `tempfile` (3.8): Temporary test directories
 
 ### Secret Path Format
 The tool uses a specific syntax for identifying secrets:
@@ -257,10 +319,66 @@ The release behavior is configured in `Cargo.toml` under `[package.metadata.rele
 - **Automatic file updates**: CHANGELOG updated with version and date
 - **Consistent commit messages**: "chore: release X.Y.Z"
 
+## Development Workflow
+
+### Before Making Changes
+1. **Always read the existing code first** - Don't propose changes without understanding current implementation
+2. **Check CHANGELOG.md** - See recent changes and planned features under `[Unreleased]`
+3. **Review test coverage** - Understand what tests exist for the area you're modifying
+
+### After Making Changes
+1. **ALWAYS run containerized tests:**
+   ```bash
+   docker build -f Dockerfile.test -t summon-keepass:test .
+   docker run --rm summon-keepass:test
+   ```
+2. **All 17 tests must pass** before submitting changes
+3. **Update CHANGELOG.md** - Add changes to `[Unreleased]` section
+4. **Update version tests** - If changing version handling, verify semver validation works
+
+### Dependency Updates
+When updating dependencies:
+1. Use `cargo update --dry-run` to preview changes
+2. Use `cargo search <crate>` to find latest versions
+3. Update `Cargo.toml` with new versions
+4. **Run full test suite** to catch breaking changes
+5. Update dependency versions in CLAUDE.md Architecture section
+6. Document any API changes required in CHANGELOG.md
+
 ## Known Issues and Todo Items
 
-From README.md:
-- Tests need to be added
+**Completed:**
+- ✅ Tests (comprehensive 17-test suite with Docker integration)
+- ✅ Version flag support
+- ✅ CI/CD pipeline with automated releases
+- ✅ cargo-release integration
+- ✅ Error handling improvements (graceful exit codes)
+
+**Outstanding (from README.md):**
 - KeePass DB password should be read from environment variable (preferred over config file)
 - Key file authentication not yet supported
 - Error handling for incorrect config/KeePass DB file paths needs improvement
+
+## Recent Updates (v0.4.0)
+
+**Dependency Updates:**
+- Updated `keepass` from 0.4.9 → 0.8.16 (major version, API changes required)
+- Updated `rust-ini` from 0.9.4 → 0.21.3 (major version)
+- Updated `newline-converter` from 0.2.0 → 0.3.0 (minor version)
+
+**API Changes Required:**
+- Changed `keepass::NodeRef` import to `keepass::db::NodeRef` (module reorganization)
+- Updated `Database::open()` to use new `DatabaseKey` API:
+  ```rust
+  // Old API (0.4.9)
+  Database::open(&mut file, Some(password), None)?
+
+  // New API (0.8.16)
+  let key = DatabaseKey::new().with_password(password);
+  Database::open(&mut file, key).map_err(...)?
+  ```
+
+**Testing:**
+- All 17 integration tests pass with updated dependencies
+- No functional regressions
+- Version validation tests use semver format checking (no hardcoded versions)
