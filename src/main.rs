@@ -17,6 +17,20 @@ struct KeePassConfig {
     db_pass: String,
 }
 
+enum FieldType<'a> {
+    TextField(&'a str),
+    Attachment(&'a str),
+}
+
+fn parse_field_specifier(field: &str) -> FieldType<'_> {
+    const PREFIX: &str = "attachment:";
+    if field.starts_with(PREFIX) {
+        FieldType::Attachment(&field[PREFIX.len()..])
+    } else {
+        FieldType::TextField(field)
+    }
+}
+
 fn main() -> std::io::Result<()> {
     let stdout = io::stdout();
     let mut out_handle = stdout.lock();
@@ -66,30 +80,41 @@ fn main() -> std::io::Result<()> {
     let secret_path = args[1].to_str().unwrap();
     let secret_vec = secret_path.split("|").collect::<Vec<&str>>();
 
-    let field;
-    if secret_vec.len() == 2 {
-        field = secret_vec[1];
-    }
-    else if secret_vec.len() == 1 {
-        field = "Password";
-    }
-    else {
+    let field_type = if secret_vec.len() == 2 {
+        parse_field_specifier(secret_vec[1])
+    } else if secret_vec.len() == 1 {
+        FieldType::TextField("Password")
+    } else {
         err_handle.write(format!("{} is no valid secret path", secret_path).as_bytes()).unwrap();
         err_handle.flush().unwrap();
         process::exit(2);
+    };
 
-    }
     let entry_path = secret_vec[0].split("/").collect::<Vec<&str>>();
     if let Some(NodeRef::Entry(e)) = db.root.get(&entry_path) {
-        // Check if the field exists
-        if let Some(field_value) = e.get(field) {
-            out_handle.write(dos2unix(field_value).as_bytes()).unwrap();
-            out_handle.flush().unwrap();
-            process::exit(0);
-        } else {
-            err_handle.write(format!("{} could not be retrieved", secret_path).as_bytes()).unwrap();
-            err_handle.flush().unwrap();
-            process::exit(1);
+        match field_type {
+            FieldType::TextField(field_name) => {
+                if let Some(field_value) = e.get(field_name) {
+                    out_handle.write(dos2unix(field_value).as_bytes()).unwrap();
+                    out_handle.flush().unwrap();
+                    process::exit(0);
+                } else {
+                    err_handle.write(format!("{} could not be retrieved", secret_path).as_bytes()).unwrap();
+                    err_handle.flush().unwrap();
+                    process::exit(1);
+                }
+            }
+            FieldType::Attachment(attachment_name) => {
+                if let Some(bytes) = e.get_bytes(attachment_name) {
+                    out_handle.write_all(bytes).unwrap();
+                    out_handle.flush().unwrap();
+                    process::exit(0);
+                } else {
+                    err_handle.write(format!("attachment '{}' not found in entry '{}'", attachment_name, secret_vec[0]).as_bytes()).unwrap();
+                    err_handle.flush().unwrap();
+                    process::exit(1);
+                }
+            }
         }
     }
 
@@ -115,9 +140,11 @@ OPTIONS:
 
 SECRET PATH FORMAT:
     [group/subgroup/]entry[|field]
+    [group/subgroup/]entry|attachment:filename
 
     By default, the 'Password' field is returned. To retrieve a different
-    field, append |field_name to the entry path.
+    field, append |field_name to the entry path. To retrieve a file
+    attachment, use |attachment:filename.
 
 EXAMPLES:
     summon-keepass "simple-entry"
@@ -131,6 +158,12 @@ EXAMPLES:
 
     summon-keepass "aws/iam/user/robot|access_key_id"
         Returns the access_key_id field from nested entry
+
+    summon-keepass "ssh/server|attachment:id_rsa"
+        Returns the binary content of the 'id_rsa' attachment
+
+    summon-keepass "certs|attachment:server.crt"
+        Returns the certificate file attachment
 
 CONFIGURATION:
 

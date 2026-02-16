@@ -90,6 +90,23 @@ pub fn run_with_config_only(args: &[&str]) -> (String, String, i32) {
     run_summon_keepass(args)
 }
 
+/// Run summon-keepass and return raw bytes for stdout (for binary attachment tests)
+pub fn run_summon_keepass_raw(args: &[&str]) -> (Vec<u8>, String, i32) {
+    let temp_home = setup_test_env();
+
+    let mut cmd = Command::cargo_bin("summon-keepass").expect("Failed to find binary");
+    cmd.env("HOME", temp_home.path());
+    cmd.args(args);
+
+    let output = cmd.output().expect("Failed to execute command");
+
+    let stdout = output.stdout;  // Raw bytes
+    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+    let exit_code = output.status.code().unwrap_or(-1);
+
+    (stdout, stderr, exit_code)
+}
+
 /// Run summon-keepass with environment variables that override config file
 pub fn run_with_env_override(args: &[&str], env_path: Option<&str>, env_pass: Option<&str>) -> (String, String, i32) {
     let temp_home = setup_test_env();

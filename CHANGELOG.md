@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- File attachment support: retrieve KeePass file attachments using `entry|attachment:filename` syntax
+- Binary output for attachments (raw bytes, no line ending conversion)
+- **Note:** Attachment support is pending keepass-rs crate update (see [issue #262](https://github.com/sseemayer/keepass-rs/issues/262))
+
 ## [0.4.0] - 2025-12-27
 
 ### Added
